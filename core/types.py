@@ -122,6 +122,43 @@ class FundingBasisState(_TypedState):
 
 
 @dataclass(frozen=True)
+class DependencyNodeState(_TypedState):
+    node_id: str
+    label: str
+    required_inputs: list[str]
+    pricing_dependencies: list[str]
+    downstream_outputs: list[str]
+
+
+@dataclass(frozen=True)
+class DependencyEdgeState(_TypedState):
+    source: str
+    target: str
+    relation: str
+
+
+@dataclass(frozen=True)
+class ShockNarrativeState(_TypedState):
+    shock: str
+    transmission_path: list[str]
+    required_reprice_nodes: list[str]
+    downstream_impact: list[str]
+
+
+@dataclass(frozen=True)
+class DependencyMapState(_TypedState):
+    map_name: str
+    focal_node: str
+    section_focus: str
+    nodes: list[DependencyNodeState]
+    edges: list[DependencyEdgeState]
+    shock_narratives: list[ShockNarrativeState]
+    signals: list[str]
+    usage: str
+    schema_name: str
+
+
+@dataclass(frozen=True)
 class CurvePoint(_TypedState):
     maturity_years: float
     rate_pct: float
