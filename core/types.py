@@ -122,25 +122,40 @@ class FundingBasisState(_TypedState):
 
 
 @dataclass(frozen=True)
-class ReferenceRateState(_TypedState):
-    benchmark_curve_a: str
-    benchmark_curve_b: str
-    benchmark_rate_a_pct: float
-    benchmark_rate_b_pct: float
-    benchmark_curve_spread_bp: float
-    spread_term_structure_bp: dict[str, float]
-    secured_rate_pct: float
-    unsecured_rate_pct: float
-    secured_unsecured_basis_bp: float
-    repo_rate_pct: float
-    reference_rate_pct: float
-    repo_reference_basis_bp: float
-    legacy_fixing_pct: float
-    compounded_rfr_pct: float
-    fallback_spread_bp: float
-    contract_adjustment_bp: float
-    all_in_coupon_pct: float
-    conventions_notes: list[str]
+class DependencyNodeState(_TypedState):
+    node_id: str
+    label: str
+    required_inputs: list[str]
+    pricing_dependencies: list[str]
+    downstream_outputs: list[str]
+
+
+@dataclass(frozen=True)
+class DependencyEdgeState(_TypedState):
+    source: str
+    target: str
+    relation: str
+
+
+@dataclass(frozen=True)
+class ShockNarrativeState(_TypedState):
+    shock: str
+    transmission_path: list[str]
+    required_reprice_nodes: list[str]
+    downstream_impact: list[str]
+
+
+@dataclass(frozen=True)
+class DependencyMapState(_TypedState):
+    map_name: str
+    focal_node: str
+    section_focus: str
+    nodes: list[DependencyNodeState]
+    edges: list[DependencyEdgeState]
+    shock_narratives: list[ShockNarrativeState]
+    signals: list[str]
+    usage: str
+    schema_name: str
 
 
 @dataclass(frozen=True)
@@ -169,6 +184,31 @@ class YieldCurveModelState(_TypedState):
     residual_diagnostics: ResidualDiagnosticsState
 
 
+
+
+@dataclass(frozen=True)
+class BondResidualState(_TypedState):
+    bond_id: str
+    maturity_years: float
+    observed_yield_pct: float
+    fitted_yield_pct: float
+    residual_bp: float
+    adjusted_residual_bp: float
+    rich_cheap_flag: str
+
+
+@dataclass(frozen=True)
+class RelativeValueScreenState(_TypedState):
+    fit_method: str
+    fitted_parameters: dict[str, float]
+    bonds: list[BondResidualState]
+    constant_maturity_yields_pct: dict[str, float]
+    residual_rmse_bp: float
+    benchmark_adjustment_bp: float
+    repo_specialness_bp: float
+    outlier_mode: str
+    scenario_value: float
+
 @dataclass(frozen=True)
 class ExecutionSignalState(_TypedState):
     action: str
@@ -191,3 +231,25 @@ class ExecutableTradeState(_TypedState):
     signal: ExecutionSignalState | None = None
     prerequisites_passed: bool = True
     validation_errors: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class GovBondTradeBlueprint(_TypedState):
+    universe: str
+    candidate_bond: str
+    rich_cheap_signal: str
+    richness_bp: float
+    curve_fit_residual_bp: float
+    curve_fit_zscore: float
+    decomposition: dict[str, float]
+    pca_neutralization_applied: bool
+    pca_residual_factor_exposure: float
+    pca_candidate_weights: dict[str, float]
+    mean_reversion_validated: bool
+    mean_reversion_metrics: dict[str, float]
+    risk_metrics: dict[str, float]
+    hedge_comparison: dict[str, dict[str, float]]
+    preferred_hedge: str
+    trade_direction: str
+    conviction: str
+    rationale: str

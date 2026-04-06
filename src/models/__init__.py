@@ -20,6 +20,7 @@ from . import (
     shadow_costs,
     swap_spreads,
     yield_curve,
+    fitted_curves,
 )
 
 __all__ = [
@@ -42,4 +43,5 @@ __all__ = [
     "shadow_costs",
     "swap_spreads",
     "yield_curve",
+    "fitted_curves",
 ]
