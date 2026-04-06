@@ -1,179 +1,157 @@
+"""Tests for the ``src.pdf_parser`` module class-based API."""
+
+from __future__ import annotations
+
 import json
 import re
+import sys
 from pathlib import Path
 
 import pytest
 
+pytest.importorskip("pdfplumber", reason="pdfplumber is required for src.pdf_parser")
 
-@pytest.fixture(scope="module")
-def parser_module():
-    """Skip cleanly when parser module is not yet available in the repo."""
-    return pytest.importorskip("pdf_parser", reason="pdf_parser module is required for parser tests")
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from src.pdf_parser import BookParser
 
 
-@pytest.fixture
-def synthetic_text():
-    return (
+def _build_parser_with_pages(*pages: str) -> BookParser:
+    """Create a BookParser test double without opening a real PDF file."""
+    parser = BookParser.__new__(BookParser)
+    parser.pdf_path = "<synthetic>"
+    parser.pdf = None
+    parser.pages_text = list(pages)
+    parser.chapters = None
+    parser.chapter_summaries = None
+    return parser
+
+
+def test_chapter_heading_regex_recognition() -> None:
+    synthetic_text = (
         "Preface text that should be ignored by chapter splitting.\n\n"
         "CHAPTER 1 Duration and Convexity\n"
-        "Duration measures sensitivity to rate moves. "
-        "Convexity refines the estimate for larger shifts. "
-        "Portfolio hedges may target both metrics.\n\n"
+        "Duration measures sensitivity to rate moves.\n\n"
         "CHAPTER 2 Curve Trades\n"
-        "Steepeners and flatteners express relative-value views. "
-        "Carry and roll-down can drive realized returns. "
-        "Risk limits and liquidity matter for implementation."
+        "Steepeners and flatteners express relative-value views."
     )
 
-
-@pytest.fixture
-def expected_chapter_pattern():
-    # Anchored, case-insensitive chapter heading detection pattern.
-    return re.compile(r"^CHAPTER\s+\d+\b.*$", re.IGNORECASE | re.MULTILINE)
-
-
-def _resolve_callable(module, *candidate_names):
-    for name in candidate_names:
-        fn = getattr(module, name, None)
-        if callable(fn):
-            return fn
-    pytest.skip(f"None of the expected callables were found: {candidate_names}")
-
-
-def _chapter_id(chapter_obj):
-    if isinstance(chapter_obj, dict):
-        return chapter_obj.get("id") or chapter_obj.get("chapter_id")
-    return getattr(chapter_obj, "id", None) or getattr(chapter_obj, "chapter_id", None)
-
-
-def _chapter_title(chapter_obj):
-    if isinstance(chapter_obj, dict):
-        return chapter_obj.get("title")
-    return getattr(chapter_obj, "title", None)
-
-
-def test_chapter_heading_regex_recognition(synthetic_text, expected_chapter_pattern):
-    matches = expected_chapter_pattern.findall(synthetic_text)
+    matches = BookParser.CHAPTER_PATTERN.findall(synthetic_text)
 
     assert len(matches) == 2
-    assert matches[0].startswith("CHAPTER 1")
-    assert matches[1].startswith("CHAPTER 2")
+    assert matches[0][0] == "1"
+    assert matches[1][0] == "2"
 
 
-def test_chapter_split_count_and_metadata_fields(parser_module, synthetic_text):
-    split_fn = _resolve_callable(
-        parser_module,
-        "split_into_chapters",
-        "split_chapters",
-        "extract_chapters",
+def test_split_into_chapters_count_and_metadata_fields() -> None:
+    parser = _build_parser_with_pages(
+        "Preface text that should be ignored by chapter splitting.\n\n"
+        "CHAPTER 1 Duration and Convexity\n"
+        "Duration measures sensitivity to rate moves."
+        " Convexity refines the estimate for larger shifts.",
+        "CHAPTER 2 Curve Trades\n"
+        "Steepeners and flatteners express relative-value views."
+        " Carry and roll-down can drive realized returns.",
     )
 
-    chapters = split_fn(synthetic_text)
+    chapters = parser.split_into_chapters()
 
     assert isinstance(chapters, list)
     assert len(chapters) == 2
 
     first, second = chapters
-    assert _chapter_id(first) is not None
-    assert _chapter_id(second) is not None
-    assert _chapter_title(first)
-    assert _chapter_title(second)
+    assert first["chapter_number"] == "1"
+    assert second["chapter_number"] == "2"
+    assert first["title"] == "Duration and Convexity"
+    assert second["title"] == "Curve Trades"
+    assert "Duration measures sensitivity" in first["body"]
+    assert "Steepeners and flatteners" in second["body"]
 
 
-def test_summary_generation_sentence_length_constraints(parser_module):
-    summarize_fn = _resolve_callable(
-        parser_module,
-        "generate_summary",
-        "summarize_text",
-        "summarize_chapter",
-    )
-
-    source_text = (
-        "Bond prices and yields move inversely. "
-        "Duration estimates first-order sensitivity to yield changes. "
-        "Convexity captures curvature effects and improves approximation quality. "
-        "Traders monitor carry, roll-down, and spread behavior in addition to outright rates. "
-        "Risk management combines scenario analysis with position limits. "
-        "Liquidity constraints can dominate execution outcomes during stress."
-    )
-
-    summary = summarize_fn(source_text)
-    assert isinstance(summary, str)
-
-    # Count sentence-like segments while ignoring trailing punctuation artifacts.
-    sentences = [s.strip() for s in re.split(r"[.!?]+", summary) if s.strip()]
-
-    assert 3 <= len(sentences) <= 5
-
-
-def test_quote_extraction_excludes_blank_and_duplicates(parser_module):
-    extract_quotes_fn = _resolve_callable(
-        parser_module,
-        "extract_quotes",
-        "find_quotes",
-    )
-
-    sample_text = (
-        'The desk note says "Carry matters." '
-        'Analyst repeats "Carry matters." '
-        'Then adds "Liquidity can vanish quickly." '
-        'Ignore empty quotes like "".'
-    )
-
-    quotes = extract_quotes_fn(sample_text)
-
-    assert isinstance(quotes, list)
-    assert all(isinstance(q, str) for q in quotes)
-    assert all(q.strip() for q in quotes)
-    assert len(quotes) == len(set(quotes))
-
-
-def test_json_serialization_writes_expected_schema_keys(parser_module, tmp_path):
-    serialize_fn = _resolve_callable(
-        parser_module,
-        "serialize_chapters_to_json",
-        "save_chapters_json",
-        "write_chapters_json",
-    )
-
-    chapters = [
+def test_summarise_chapters_sentence_length_constraints() -> None:
+    parser = _build_parser_with_pages()
+    parser.chapters = [
         {
-            "id": 1,
+            "chapter_number": "1",
+            "title": "Summary Test",
+            "body": (
+                "Bond prices and yields move inversely. "
+                "Duration estimates first-order sensitivity to yield changes. "
+                "Convexity captures curvature effects and improves approximation quality. "
+                "Traders monitor carry, roll-down, and spread behavior in addition to rates. "
+                "Risk management combines scenario analysis with position limits. "
+                "Liquidity constraints can dominate execution outcomes during stress."
+            ),
+        }
+    ]
+
+    summaries = parser.summarise_chapters()
+
+    assert len(summaries) == 1
+    summary_sentences = summaries[0]["summary_sentences"]
+    assert isinstance(summary_sentences, list)
+    assert 3 <= len(summary_sentences) <= 5
+
+
+def test_quote_candidates_excludes_blank_and_duplicates() -> None:
+    parser = _build_parser_with_pages()
+    deduped = parser._dedupe_preserve_order(
+        [
+            "Carry matters.",
+            "Carry matters.",
+            "  ",
+            "Liquidity can vanish quickly.",
+            "liquidity can   vanish quickly.  ",
+        ]
+    )
+
+    assert deduped == ["Carry matters.", "Liquidity can vanish quickly."]
+
+
+def test_save_summaries_json_writes_expected_schema_keys(tmp_path) -> None:
+    parser = _build_parser_with_pages()
+    parser.chapter_summaries = [
+        {
+            "chapter_number": "1",
             "title": "Duration and Convexity",
-            "summary": "A concise chapter summary.",
-            "quotes": ["Carry matters.", "Liquidity can vanish quickly."],
+            "summary_sentences": ["A concise chapter summary."],
+            "quote_candidates": ["Carry matters.", "Liquidity can vanish quickly."],
         },
         {
-            "id": 2,
+            "chapter_number": "2",
             "title": "Curve Trades",
-            "summary": "Another concise chapter summary.",
-            "quotes": ["Steepeners express directional slope views."],
+            "summary_sentences": ["Another concise chapter summary."],
+            "quote_candidates": ["Steepeners express directional slope views."],
         },
     ]
 
-    output_path = tmp_path / "chapters.json"
-    result = serialize_fn(chapters, output_path)
+    output_path = tmp_path / "chapter_summaries.json"
+    result = parser.save_summaries_json(str(output_path))
 
-    if isinstance(result, (str, Path)):
-        output_path = Path(result)
-
+    assert result == str(output_path)
     assert output_path.exists()
 
     payload = json.loads(output_path.read_text(encoding="utf-8"))
     assert isinstance(payload, list)
-    assert payload
+    assert len(payload) == 2
 
     for item in payload:
-        assert "id" in item
+        assert "chapter_number" in item
         assert "title" in item
-        assert "summary" in item
-        assert "quotes" in item
-        assert isinstance(item["quotes"], list)
-"""Tests for PDF parser module."""
-
-from src.pdf_parser import parse_pdf
+        assert "summary_sentences" in item
+        assert "quote_candidates" in item
+        assert isinstance(item["summary_sentences"], list)
+        assert isinstance(item["quote_candidates"], list)
 
 
-def test_parse_pdf_returns_placeholder_dict() -> None:
-    result = parse_pdf("data/Fixed Income Relative Value Analysis.pdf")
-    assert result["status"] == "not_implemented"
+def test_segment_sentences_filters_short_noise() -> None:
+    parser = _build_parser_with_pages()
+    sentences = parser._segment_sentences(
+        'Short. "x". Duration helps estimate risk exposure under curve shifts. 12345. '
+        "Liquidity conditions matter during stressed markets."
+    )
+
+    assert len(sentences) == 2
+    assert all(len(re.findall(r"[A-Za-z]", s)) >= 8 for s in sentences)
