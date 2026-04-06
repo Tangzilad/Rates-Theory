@@ -1,7 +1,7 @@
 import json
 from dataclasses import is_dataclass
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import streamlit as st
 from core.diagnostics import validate_boundary
@@ -17,7 +17,7 @@ from src.chapter_summary_schema import (
     legacy_map_to_document,
 )
 
-from chapters import build_chapter_registry, get_chapter, validate_chapter_dependencies
+from src.chapters.registry import build_chapter_registry, get_chapter, validate_chapter_dependencies
 
 
 st.set_page_config(page_title="Rates Theory Lab", layout="wide")

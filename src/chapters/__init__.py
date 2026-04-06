@@ -1,9 +1,4 @@
-"""Legacy compatibility re-exports for chapter registry.
-
-Deprecated: import from ``src.chapters.registry`` directly.
-"""
-
-from src.chapters.registry import (
+from .registry import (
     CHAPTER_DEPENDENCIES,
     build_chapter_registry,
     get_chapter,
