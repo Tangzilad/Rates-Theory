@@ -195,12 +195,25 @@ class CurveFairValueState(_TypedState):
 
 @dataclass(frozen=True)
 class ReferenceRateState(_TypedState):
+    benchmark_curve_a: str
+    benchmark_curve_b: str
+    benchmark_rate_a_pct: float
+    benchmark_rate_b_pct: float
+    benchmark_curve_spread_bp: float
+    spread_term_structure_bp: dict[str, float]
+    secured_rate_pct: float
+    unsecured_rate_pct: float
+    secured_unsecured_basis_bp: float
+    repo_rate_pct: float
+    reference_rate_pct: float
+    repo_reference_basis_bp: float
+    benchmark_spread_decomposition_bp: dict[str, float]
     legacy_fixing_pct: float
-    rfr_compounded_pct: float
+    compounded_rfr_pct: float
     contract_adjustment_bp: float
     fallback_spread_bp: float
     all_in_coupon_pct: float
-    coupon_vs_legacy_bp: float
+    conventions_notes: list[str]
 
 
 @dataclass(frozen=True)

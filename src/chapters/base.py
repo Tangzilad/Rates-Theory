@@ -81,6 +81,21 @@ class ChapterBase(ABC):
     def checkpoint(self) -> list[dict[str, str]]:
         return self.assessment()
 
+    def key_takeaway(self) -> str:
+        return self.core_claim()
+
+    def common_confusions(self) -> list[dict[str, str]]:
+        return self.failure_modes_model_risk()
+
+    def learn_focus(self) -> list[str]:
+        return []
+
+    def derive_focus(self) -> list[str]:
+        return []
+
+    def trade_use_focus(self) -> list[str]:
+        return []
+
 
 class PlaceholderChapter(ChapterBase):
     """Explicitly non-implemented chapter that surfaces missing contracts."""

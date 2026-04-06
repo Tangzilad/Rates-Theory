@@ -35,3 +35,18 @@ def spread_term_structure_bp(
     """Return tenor-level curve A minus curve B spreads in basis points."""
     common_tenors = [tenor for tenor in curve_a_by_tenor_pct if tenor in curve_b_by_tenor_pct]
     return {tenor: curve_spread_bp(curve_a_by_tenor_pct[tenor], curve_b_by_tenor_pct[tenor]) for tenor in common_tenors}
+
+
+def benchmark_spread_decomposition_bp(
+    secured_unsecured_bp: float,
+    repo_reference_bp: float,
+    transition_overlay_bp: float,
+) -> dict[str, float]:
+    """Return additive benchmark spread decomposition."""
+    total = secured_unsecured_bp + repo_reference_bp + transition_overlay_bp
+    return {
+        "secured_unsecured_basis_bp": secured_unsecured_bp,
+        "repo_reference_basis_bp": repo_reference_bp,
+        "transition_overlay_bp": transition_overlay_bp,
+        "total_benchmark_spread_bp": total,
+    }
