@@ -90,7 +90,7 @@
   "3": {
     "title": "Chapter 3: PCA factor extraction",
     "learning_objective": "Extract orthogonal curve factors for diagnostics.",
-    "summary": "Uses covariance-eigen decomposition to reduce dimensionality and identify level/slope/curvature style drivers.",
+    "summary": "Uses covariance-eigen decomposition to produce factor scores through time, reconstruction controls, residualized series, and candidate factor-neutral hedge weights.",
     "quotes": [
       "Explained variance is a ranking tool, not an economic guarantee.",
       "Stable factors require stable data engineering."
@@ -105,12 +105,27 @@
       {
         "name": "Explained variance ratio",
         "equation": "EV_i=lambda_i/sum(lambda)"
+      },
+      {
+        "name": "Factor scores through time",
+        "equation": "F=ZV"
+      },
+      {
+        "name": "Partial reconstruction with first k PCs",
+        "equation": "X_hat_k=F_kV_k^T"
+      },
+      {
+        "name": "Residualized panel",
+        "equation": "R_k=Z-X_hat_k"
       }
     ],
     "derivation_steps": [
-      "Standardize input panel.",
-      "Compute covariance matrix.",
-      "Sort eigenpairs and retain leading components."
+      "Standardize input panel into Z-scores matrix Z.",
+      "Compute covariance matrix, then sort eigenpairs descending by eigenvalue.",
+      "Compute factor scores through time F = Z @ eigenvectors.",
+      "Enable selectable reconstruction using first k components (PC1 only, PC1+PC2, etc.).",
+      "Compute residualized panel after removing selected PCs and construct candidate neutral hedge weights.",
+      "Interpret leading factors as likely level/slope/curvature with explicit caveat that PCA factors are statistical."
     ],
     "failure_modes": [
       {
@@ -125,7 +140,10 @@
     ],
     "exports_to_next_chapter": [
       "factor_scores",
-      "explained_variance"
+      "explained_variance",
+      "eigenvectors",
+      "residualized_series",
+      "candidate_neutral_hedge_weights"
     ]
   },
   "4": {
