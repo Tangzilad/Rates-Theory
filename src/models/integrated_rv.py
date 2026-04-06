@@ -8,51 +8,12 @@ Pedagogical simplification:
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
-
-
-@dataclass(frozen=True)
-class _TypedState:
-    """Minimal typed-state helper with pydantic-like dump semantics."""
-
-    def model_dump(self) -> dict[str, object]:
-        return asdict(self)
-
-
-@dataclass(frozen=True)
-class CommonSpaceNormalizationState(_TypedState):
-    frame: str
-    reference_rate: str
-    transformed_signals_bp: dict[str, float]
-    normalized_signals_bp: dict[str, float]
-
-
-@dataclass(frozen=True)
-class AgreementDivergenceDiagnosticsState(_TypedState):
-    mean_signal_bp: float
-    max_deviation_bp: float
-    agreement_ratio: float
-    divergence_flag: bool
-    directional_votes: dict[str, str]
-
-
-@dataclass(frozen=True)
-class ShockPropagationState(_TypedState):
-    shocked_input: str
-    shock_bp: float
-    propagation_order: list[str]
-    shocked_signals_bp: dict[str, float]
-
-
-@dataclass(frozen=True)
-class IntegratedRVState(_TypedState):
-    bond_local_space_signal_bp: float
-    asset_swap_transformed_signal_bp: float
-    basis_transformed_signals_bp: dict[str, float]
-    cds_pure_credit_signal_bp: float
-    common_space_normalization: CommonSpaceNormalizationState
-    agreement_divergence_diagnostics: AgreementDivergenceDiagnosticsState
-    shock_propagation_results: ShockPropagationState
+from core.types import (
+    AgreementDivergenceDiagnosticsState,
+    CommonSpaceNormalizationState,
+    IntegratedRVState,
+    ShockPropagationState,
+)
 
 
 def execution_signal(signal_bp: float, transaction_cost_bp: float, entry_threshold_bp: float) -> tuple[float, float, bool]:

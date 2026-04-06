@@ -141,6 +141,41 @@ class PureCreditState(_TypedState):
 
 
 @dataclass(frozen=True)
+class ICBSTermPoint(_TypedState):
+    maturity_years: float
+    benchmark_a_pct: float
+    benchmark_b_pct: float
+    basis_bp: float
+
+
+@dataclass(frozen=True)
+class ICBSState(_TypedState):
+    benchmark_a_name: str
+    benchmark_b_name: str
+    current_basis_bp: float
+    term_structure: list[ICBSTermPoint]
+    carry_estimate_bp: float
+    rolldown_estimate_bp: float
+    simplification_notes: list[str]
+
+
+@dataclass(frozen=True)
+class CCBSSensitivityPoint(_TypedState):
+    basis_shock_bp: float
+    shocked_basis_bp: float
+    shocked_synthetic_domestic_yield_pct: float
+
+
+@dataclass(frozen=True)
+class CCBSState(_TypedState):
+    quote_convention: str
+    basis_bp: float
+    synthetic_domestic_hedged_yield_pct: float
+    sensitivity_table: list[CCBSSensitivityPoint]
+    simplification_notes: list[str]
+
+
+@dataclass(frozen=True)
 class FuturesBasisState(_TypedState):
     utilization: float
     headroom: float
@@ -159,20 +194,6 @@ class CurveFairValueState(_TypedState):
 
 
 @dataclass(frozen=True)
-class GovBondTradeBlueprint(_TypedState):
-    trade_name: str
-    entry_leg: str
-    hedge_leg: str
-    target_notional_mm: float
-    hedge_ratio: float
-    expected_edge_bp: float
-    dv01_neutrality_gap_usd_per_bp: float
-    stop_loss_bp: float
-    take_profit_bp: float
-    approved: bool
-
-
-@dataclass(frozen=True)
 class ReferenceRateState(_TypedState):
     legacy_fixing_pct: float
     rfr_compounded_pct: float
@@ -186,11 +207,18 @@ class ReferenceRateState(_TypedState):
 class AssetSwapState(_TypedState):
     z_spread_bp: float
     bond_coupon_pct: float
-    swap_rate_pct: float
-    repo_drag_bp: float
+    benchmark_rate_pct: float
+    reference_rate_name: str
+    benchmark_type: str
+    package_upfront_pct: float
+    repo_funding_rate_pct: float
+    funding_shift_bp: float
     coupon_mismatch_bp: float
     asset_swap_spread_bp: float
     package_carry_bp: float
+    fair_package_level_bp: float
+    funding_sensitivity_bp_per_1bp: float
+    simplification_notes: list[str]
 
 
 @dataclass(frozen=True)
@@ -228,24 +256,6 @@ class DependencyMapState(_TypedState):
     signals: list[str]
     usage: str
     schema_name: str
-
-
-@dataclass(frozen=True)
-class AssetSwapState(_TypedState):
-    z_spread_bp: float
-    bond_coupon_pct: float
-    benchmark_rate_pct: float
-    reference_rate_name: str
-    benchmark_type: str
-    package_upfront_pct: float
-    repo_funding_rate_pct: float
-    funding_shift_bp: float
-    coupon_mismatch_bp: float
-    asset_swap_spread_bp: float
-    package_carry_bp: float
-    fair_package_level_bp: float
-    funding_sensitivity_bp_per_1bp: float
-    simplification_notes: list[str]
 
 
 @dataclass(frozen=True)
@@ -345,6 +355,57 @@ class GlobalRVScreenState(_TypedState):
     residual_rmse_bp: float
     rv_spread_pnl: float
     total_stress_pnl: float
+
+
+@dataclass(frozen=True)
+class CommonSpaceNormalizationState(_TypedState):
+    frame: str
+    reference_rate: str
+    transformed_signals_bp: dict[str, float]
+    normalized_signals_bp: dict[str, float]
+
+
+@dataclass(frozen=True)
+class AgreementDivergenceDiagnosticsState(_TypedState):
+    mean_signal_bp: float
+    max_deviation_bp: float
+    agreement_ratio: float
+    divergence_flag: bool
+    directional_votes: dict[str, str]
+
+
+@dataclass(frozen=True)
+class ShockPropagationState(_TypedState):
+    shocked_input: str
+    shock_bp: float
+    propagation_order: list[str]
+    shocked_signals_bp: dict[str, float]
+
+
+@dataclass(frozen=True)
+class IntegratedRVState(_TypedState):
+    bond_local_space_signal_bp: float
+    asset_swap_transformed_signal_bp: float
+    basis_transformed_signals_bp: dict[str, float]
+    cds_pure_credit_signal_bp: float
+    common_space_normalization: CommonSpaceNormalizationState
+    agreement_divergence_diagnostics: AgreementDivergenceDiagnosticsState
+    shock_propagation_results: ShockPropagationState
+
+
+@dataclass(frozen=True)
+class ShadowCostState(_TypedState):
+    structural_fair_spread_bp: float
+    observed_spread_bp: float
+    spread_gap_bp: float
+    spread_bp_value_dollars: float
+    shadow_funding_cost_bp: float
+    capital_charge_dollars: float
+    capital_charge_bp: float
+    liquidity_wedge_bp: float
+    repo_stress_add_on_bp: float
+    adjusted_executable_spread_residual_bp: float
+    approval_gate: str
 
 @dataclass(frozen=True)
 class ExecutionSignalState(_TypedState):

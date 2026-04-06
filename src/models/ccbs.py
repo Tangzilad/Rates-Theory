@@ -7,7 +7,7 @@ Pedagogical simplification:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from core.types import CCBSState, CCBSSensitivityPoint
 
 
 SIMPLIFICATION_NOTES = [
@@ -15,22 +15,6 @@ SIMPLIFICATION_NOTES = [
     "Synthetic domestic hedged yield uses additive decomposition of foreign yield, FX hedge, and basis.",
     "Shock sensitivity assumes linear pass-through from basis shocks into synthetic yield.",
 ]
-
-
-@dataclass(frozen=True)
-class CCBSSensitivityPoint:
-    basis_shock_bp: float
-    shocked_basis_bp: float
-    shocked_synthetic_domestic_yield_pct: float
-
-
-@dataclass(frozen=True)
-class CCBSChapterPayload:
-    quote_convention: str
-    basis_bp: float
-    synthetic_domestic_hedged_yield_pct: float
-    sensitivity_table: list[CCBSSensitivityPoint]
-    simplification_notes: list[str]
 
 
 
@@ -147,7 +131,7 @@ def ccbs_chapter_payload(
     credit_adjustment_bp: float = 0.0,
     repo_adjustment_bp: float = 0.0,
     reference_rate_adjustment_bp: float = 0.0,
-) -> CCBSChapterPayload:
+) -> CCBSState:
     """Return chapter-ready CCBS payload as a typed dataclass.
 
     Payload contains convention-aware implied basis, synthetic domestic hedged
@@ -176,7 +160,7 @@ def ccbs_chapter_payload(
         quote_convention=quote_convention,
     )
 
-    return CCBSChapterPayload(
+    return CCBSState(
         quote_convention=quote_convention,
         basis_bp=basis_bp,
         synthetic_domestic_hedged_yield_pct=synthetic_yield,

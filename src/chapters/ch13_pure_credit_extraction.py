@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import streamlit as st
 
+from core.types import ChapterExportState
+
 from .base import SimpleChapter
 
 
@@ -143,14 +145,14 @@ class Chapter13(SimpleChapter):
             },
         }
 
-    def exports_to_next_chapter(self) -> dict[str, object]:
-        return {
-            "schema_name": "PureCreditState",
-            "signals": [
+    def exports_to_next_chapter(self) -> ChapterExportState:
+        return ChapterExportState(
+            schema_name="PureCreditState",
+            signals=[
                 "observed_spread_bp",
                 "purified_credit_spread_bp",
                 "hazard_proxy",
                 "recovery_sensitivity",
             ],
-            "usage": "Feeds downstream trade design with raw-vs-purified credit signal diagnostics and recovery-aware hazard mapping.",
-        }
+            usage="Feeds downstream trade design with raw-vs-purified credit signal diagnostics and recovery-aware hazard mapping.",
+        )

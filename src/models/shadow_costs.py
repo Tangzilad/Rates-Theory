@@ -10,25 +10,10 @@ Pedagogical simplifications and boundaries:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Literal
+from core.types import ShadowCostState
 
 ApprovalGate = Literal["approve", "do_not_approve"]
-
-
-@dataclass(frozen=True)
-class ShadowCostState:
-    structural_fair_spread_bp: float
-    observed_spread_bp: float
-    spread_gap_bp: float
-    spread_bp_value_dollars: float
-    shadow_funding_cost_bp: float
-    capital_charge_dollars: float
-    capital_charge_bp: float
-    liquidity_wedge_bp: float
-    repo_stress_add_on_bp: float
-    adjusted_executable_spread_residual_bp: float
-    approval_gate: ApprovalGate
 
 
 def capital_shadow_state(
