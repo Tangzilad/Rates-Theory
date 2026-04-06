@@ -7,7 +7,7 @@ Pedagogical simplification:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from core.types import ICBSState, ICBSTermPoint
 
 
 SIMPLIFICATION_NOTES = [
@@ -15,25 +15,6 @@ SIMPLIFICATION_NOTES = [
     "Term structure interpolation/bootstrapping is omitted; each maturity is handled pointwise.",
     "Carry and rolldown are linearized and exclude convexity, day-count, and collateral effects.",
 ]
-
-
-@dataclass(frozen=True)
-class ICBSTermPoint:
-    maturity_years: float
-    benchmark_a_pct: float
-    benchmark_b_pct: float
-    basis_bp: float
-
-
-@dataclass(frozen=True)
-class ICBSChapterPayload:
-    benchmark_a_name: str
-    benchmark_b_name: str
-    current_basis_bp: float
-    term_structure: list[ICBSTermPoint]
-    carry_estimate_bp: float
-    rolldown_estimate_bp: float
-    simplification_notes: list[str]
 
 
 
@@ -151,7 +132,7 @@ def icbs_chapter_payload(
     expected_basis_bp: float,
     carry_horizon_years: float,
     reference_rate_adjustment_bp: float = 0.0,
-) -> ICBSChapterPayload:
+) -> ICBSState:
     """Return chapter-ready ICBS payload as a typed dataclass.
 
     The payload bundles current basis, term structure, carry estimate, and rolldown
@@ -169,7 +150,7 @@ def icbs_chapter_payload(
         reference_rate_adjustment_bp=reference_rate_adjustment_bp,
     )
 
-    return ICBSChapterPayload(
+    return ICBSState(
         benchmark_a_name=benchmark_a_name,
         benchmark_b_name=benchmark_b_name,
         current_basis_bp=current_basis,

@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import streamlit as st
 
-from src.models.integrated_rv import IntegratedRVState, integrated_rv_state
+from core.types import ChapterExportState, IntegratedRVState
+from src.models.integrated_rv import integrated_rv_state
 
 from .base import SimpleChapter
 
@@ -100,13 +101,13 @@ class Chapter16(SimpleChapter):
 
         return state
 
-    def exports_to_next_chapter(self) -> dict[str, object]:
-        return {
-            "schema_name": "IntegratedRVState",
-            "signals": [
+    def exports_to_next_chapter(self) -> ChapterExportState:
+        return ChapterExportState(
+            schema_name="IntegratedRVState",
+            signals=[
                 "common_space_normalization.normalized_signals_bp",
                 "agreement_divergence_diagnostics",
                 "shock_propagation_results",
             ],
-            "usage": "Passes normalized multi-leg signals and propagated-shock diagnostics into chapter 17 global RV stress ranking.",
-        }
+            usage="Passes normalized multi-leg signals and propagated-shock diagnostics into chapter 17 global RV stress ranking.",
+        )

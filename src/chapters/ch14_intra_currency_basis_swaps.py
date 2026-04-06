@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import streamlit as st
 
+from core.types import ChapterExportState
+
 from .base import SimpleChapter
 
 
@@ -64,9 +66,9 @@ class Chapter14(SimpleChapter):
             },
         }
 
-    def exports_to_next_chapter(self) -> dict[str, object]:
-        return {
-            "schema_name": "IntraCurrencyBasisState",
-            "signals": ["net_edge_bp", "execution_confidence", "execute_flag"],
-            "usage": "Feeds cross-currency basis structuring with an executable confidence score.",
-        }
+    def exports_to_next_chapter(self) -> ChapterExportState:
+        return ChapterExportState(
+            schema_name="ICBSState",
+            signals=["net_edge_bp", "execution_confidence", "execute_flag"],
+            usage="Feeds cross-currency basis structuring with an executable confidence score.",
+        )

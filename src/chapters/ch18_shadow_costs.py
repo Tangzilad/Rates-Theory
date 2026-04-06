@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import streamlit as st
 
+from core.types import ChapterExportState
 from .base import SimpleChapter
 from src.models.shadow_costs import capital_shadow_state
 
@@ -89,18 +90,14 @@ class Chapter18(SimpleChapter):
                 "non_monetisable_block": non_monetisable_block,
             },
             "outputs": {
-                "spread_gap_bp": state.spread_gap_bp,
-                "capital_charge_dollars": state.capital_charge_dollars,
-                "capital_charge_bp": state.capital_charge_bp,
-                "adjusted_executable_spread_residual_bp": state.adjusted_executable_spread_residual_bp,
-                "approval_gate": state.approval_gate,
+                **state.model_dump(),
             },
         }
 
-    def exports_to_next_chapter(self) -> dict[str, object]:
-        return {
-            "schema_name": "ShadowCostState",
-            "signals": [
+    def exports_to_next_chapter(self) -> ChapterExportState:
+        return ChapterExportState(
+            schema_name="ShadowCostState",
+            signals=[
                 "structural_fair_spread_bp",
                 "observed_spread_bp",
                 "shadow_funding_cost_bp",
@@ -110,5 +107,5 @@ class Chapter18(SimpleChapter):
                 "adjusted_executable_spread_residual_bp",
                 "approval_gate",
             ],
-            "usage": "Final chapter output for governance, audit trail, and portfolio allocation handoff.",
-        }
+            usage="Final chapter output for governance, audit trail, and portfolio allocation handoff.",
+        )

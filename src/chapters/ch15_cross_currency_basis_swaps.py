@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import streamlit as st
 
+from core.types import ChapterExportState
+
 from .base import SimpleChapter
 
 
@@ -62,9 +64,9 @@ class Chapter15(SimpleChapter):
             },
         }
 
-    def exports_to_next_chapter(self) -> dict[str, object]:
-        return {
-            "schema_name": "CrossCurrencyBasisState",
-            "signals": ["carry_pnl", "convergence_pnl", "expected_total_pnl"],
-            "usage": "Supplies expected package economics for integrated asset-basis-CDS construction.",
-        }
+    def exports_to_next_chapter(self) -> ChapterExportState:
+        return ChapterExportState(
+            schema_name="CCBSState",
+            signals=["carry_pnl", "convergence_pnl", "expected_total_pnl"],
+            usage="Supplies expected package economics for integrated asset-basis-CDS construction.",
+        )
