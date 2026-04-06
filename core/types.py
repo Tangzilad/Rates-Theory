@@ -37,7 +37,10 @@ class MeanReversionState(_TypedState):
 class FactorState(_TypedState):
     columns: list[str]
     explained_variance: list[float]
-    top_loadings: dict[str, list[float]]
+    eigenvectors: dict[str, list[float]]
+    factor_scores: dict[str, list[float]]
+    residualized_series: dict[str, list[float]]
+    candidate_neutral_hedge_weights: dict[str, float]
 
 
 
