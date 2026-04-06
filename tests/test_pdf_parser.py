@@ -38,11 +38,12 @@ def test_chapter_heading_regex_recognition() -> None:
         "Steepeners and flatteners express relative-value views."
     )
 
-    matches = BookParser.CHAPTER_PATTERN.findall(synthetic_text)
+    matches = [BookParser.CHAPTER_PATTERN.match(line) for line in synthetic_text.splitlines()]
+    matches = [m for m in matches if m]
 
     assert len(matches) == 2
-    assert matches[0][0] == "1"
-    assert matches[1][0] == "2"
+    assert matches[0].group(1) == "1"
+    assert matches[1].group(1) == "2"
 
 
 def test_split_into_chapters_count_and_metadata_fields() -> None:
@@ -134,16 +135,17 @@ def test_save_summaries_json_writes_expected_schema_keys(tmp_path) -> None:
     assert output_path.exists()
 
     payload = json.loads(output_path.read_text(encoding="utf-8"))
-    assert isinstance(payload, list)
-    assert len(payload) == 2
+    assert payload["schema_version"] == "1.0"
+    assert isinstance(payload["chapters"], list)
+    assert len(payload["chapters"]) == 2
 
-    for item in payload:
-        assert "chapter_number" in item
+    for item in payload["chapters"]:
+        assert "key" in item
         assert "title" in item
-        assert "summary_sentences" in item
-        assert "quote_candidates" in item
-        assert isinstance(item["summary_sentences"], list)
-        assert isinstance(item["quote_candidates"], list)
+        assert "summary" in item
+        assert "quotes" in item
+        assert isinstance(item["summary"], str)
+        assert isinstance(item["quotes"], list)
 
 
 def test_segment_sentences_filters_short_noise() -> None:

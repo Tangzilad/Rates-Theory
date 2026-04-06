@@ -9,7 +9,7 @@ from src.chapter_summary_schema import (
 )
 
 
-def test_parser_summaries_are_transformed_to_schema_document():
+def test_parser_output_maps_to_schema_document():
     raw = [
         {
             "chapter_number": "1",
@@ -27,7 +27,7 @@ def test_parser_summaries_are_transformed_to_schema_document():
     assert doc["chapters"][0]["quotes"] == ["Carry matters."]
 
 
-def test_legacy_map_can_be_normalized_to_schema_document():
+def test_legacy_map_round_trips_through_schema_document():
     legacy = {
         "1": {
             "title": "Chapter 1",

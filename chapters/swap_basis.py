@@ -10,6 +10,28 @@ from src.models.swap_spreads import asset_swap_spread, cross_currency_basis, int
 from .common import SimpleChapter
 
 
+
+
+def spread_bp(a: float, b: float) -> float:
+    """Return difference in basis points between two percentage rates."""
+    return (a - b) * 100.0
+
+
+def carry_pnl(carry_bp: float, notional: float, horizon_days: int = 1) -> float:
+    """Approximate carry PnL in currency units from annualized carry in bps."""
+    return notional * (carry_bp / 10_000.0) * (horizon_days / 360.0)
+
+
+def clamp_confidence(value: float, lo: float = 0.0, hi: float = 1.0) -> float:
+    """Clamp confidence score to [0, 1] style interval."""
+    return float(min(max(value, lo), hi))
+
+
+def package_state(schema_name: str, outputs: Dict[str, Any], usage: str) -> Dict[str, Any]:
+    """Package outputs into a standard chapter export payload."""
+    return {"schema_name": schema_name, "signals": list(outputs.keys()), "outputs": outputs, "usage": usage}
+
+
 class SwapBasisChapter(SimpleChapter):
     def equation_set(self) -> List[Dict[str, str]]:
         return [

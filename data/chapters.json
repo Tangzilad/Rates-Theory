@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "chapters": [
+    {"key": "1", "module": "chapters.ch01", "class": "Chapter01", "title": "Chapter 1"},
+    {"key": "2", "module": "chapters.ch02", "class": "Chapter02", "title": "Chapter 2"},
+    {"key": "3", "module": "chapters.ch03", "class": "Chapter03", "title": "Chapter 3"},
+    {"key": "4", "module": "chapters.ch04", "class": "Chapter04", "title": "Chapter 4"},
+    {"key": "5", "module": "chapters.ch05", "class": "Chapter05", "title": "Chapter 5"},
+    {"key": "6", "module": "chapters.ch06", "class": "Chapter06", "title": "Chapter 6"},
+    {"key": "7", "module": "chapters.ch07", "class": "Chapter07", "title": "Chapter 7"},
+    {"key": "8", "module": "chapters.ch08", "class": "Chapter08", "title": "Chapter 8"},
+    {"key": "9", "module": "chapters.ch09", "class": "Chapter09", "title": "Chapter 9"},
+    {"key": "10", "module": "chapters.ch10", "class": "Chapter10", "title": "Chapter 10"},
+    {"key": "11", "module": "chapters.ch11", "class": "Chapter11", "title": "Chapter 11"},
+    {"key": "12", "module": "chapters.ch12", "class": "Chapter12", "title": "Chapter 12"},
+    {"key": "13", "module": "chapters.ch13", "class": "Chapter13", "title": "Chapter 13"},
+    {"key": "14", "module": "chapters.ch14", "class": "Chapter14", "title": "Chapter 14"},
+    {"key": "15", "module": "chapters.ch15", "class": "Chapter15", "title": "Chapter 15"},
+    {"key": "16", "module": "chapters.ch16", "class": "Chapter16", "title": "Chapter 16"},
+    {"key": "17", "module": "chapters.ch17", "class": "Chapter17", "title": "Chapter 17"},
+    {"key": "18", "module": "chapters.ch18", "class": "Chapter18", "title": "Chapter 18"}
+  ]
+}
