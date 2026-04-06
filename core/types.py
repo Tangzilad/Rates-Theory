@@ -147,6 +147,31 @@ class YieldCurveModelState(_TypedState):
     residual_diagnostics: ResidualDiagnosticsState
 
 
+
+
+@dataclass(frozen=True)
+class BondResidualState(_TypedState):
+    bond_id: str
+    maturity_years: float
+    observed_yield_pct: float
+    fitted_yield_pct: float
+    residual_bp: float
+    adjusted_residual_bp: float
+    rich_cheap_flag: str
+
+
+@dataclass(frozen=True)
+class RelativeValueScreenState(_TypedState):
+    fit_method: str
+    fitted_parameters: dict[str, float]
+    bonds: list[BondResidualState]
+    constant_maturity_yields_pct: dict[str, float]
+    residual_rmse_bp: float
+    benchmark_adjustment_bp: float
+    repo_specialness_bp: float
+    outlier_mode: str
+    scenario_value: float
+
 @dataclass(frozen=True)
 class ExecutionSignalState(_TypedState):
     action: str
