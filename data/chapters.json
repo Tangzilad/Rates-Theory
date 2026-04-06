@@ -1,0 +1,770 @@
+{
+  "1": {
+    "title": "Chapter 1: Cash-and-carry arbitrage",
+    "learning_objective": "Map mispricing into executable arbitrage direction.",
+    "summary": "Introduces fair-futures pricing, basis interpretation, and directional cash-and-carry decisions under funding assumptions.",
+    "quotes": [
+      "Basis sign is a decision rule only after financing is modeled.",
+      "Execution discipline turns theoretical edge into realizable P&L."
+    ],
+    "market_objects": [
+      "spot bond",
+      "repo funding rate",
+      "futures contract",
+      "basis"
+    ],
+    "equations": [
+      {
+        "name": "Fair futures",
+        "equation": "F*=S*exp(r*T)"
+      },
+      {
+        "name": "Basis",
+        "equation": "basis=F_mkt-F*"
+      }
+    ],
+    "derivation_steps": [
+      "Start with spot financed in repo.",
+      "Project financing cost to futures maturity.",
+      "Compare observed vs fair futures to infer basis and trade direction."
+    ],
+    "failure_modes": [
+      {
+        "mode": "Ignoring transaction and balance-sheet costs",
+        "mitigation": "Apply entry threshold net of all-in implementation costs."
+      }
+    ],
+    "prerequisites": [
+      "Bond pricing basics",
+      "Carry math",
+      "Repo mechanics"
+    ],
+    "exports_to_next_chapter": [
+      "basis",
+      "arbitrage_direction",
+      "confidence"
+    ]
+  },
+  "2": {
+    "title": "Chapter 2: OU mean reversion",
+    "learning_objective": "Quantify spread reversion and first-passage risk.",
+    "summary": "Frames spread dynamics with an Ornstein-Uhlenbeck process and links simulation outputs to hit probabilities and half-life metrics.",
+    "quotes": [
+      "Half-life is useful only relative to your holding horizon.",
+      "First-passage risk is a path property, not a terminal-value property."
+    ],
+    "market_objects": [
+      "spread state variable",
+      "reversion speed",
+      "barrier",
+      "simulation paths"
+    ],
+    "equations": [
+      {
+        "name": "OU SDE",
+        "equation": "dX_t=theta(mu-X_t)dt+sigma dW_t"
+      }
+    ],
+    "derivation_steps": [
+      "Discretize OU dynamics with Euler-Maruyama.",
+      "Simulate paths under calibrated parameters.",
+      "Compute barrier-hit probability and expected hit time."
+    ],
+    "failure_modes": [
+      {
+        "mode": "Treating regime shifts as stationary noise",
+        "mitigation": "Use rolling calibration and structural break checks."
+      }
+    ],
+    "prerequisites": [
+      "Stochastic calculus notation",
+      "Monte Carlo simulation",
+      "Sharpe interpretation"
+    ],
+    "exports_to_next_chapter": [
+      "half_life_days",
+      "hit_probability",
+      "terminal_sharpe"
+    ]
+  },
+  "3": {
+    "title": "Chapter 3: PCA factor extraction",
+    "learning_objective": "Extract orthogonal curve factors for diagnostics.",
+    "summary": "Uses covariance-eigen decomposition to reduce dimensionality and identify level/slope/curvature style drivers.",
+    "quotes": [
+      "Explained variance is a ranking tool, not an economic guarantee.",
+      "Stable factors require stable data engineering."
+    ],
+    "market_objects": [
+      "tenor return matrix",
+      "covariance matrix",
+      "eigenvectors",
+      "factor scores"
+    ],
+    "equations": [
+      {
+        "name": "Explained variance ratio",
+        "equation": "EV_i=lambda_i/sum(lambda)"
+      }
+    ],
+    "derivation_steps": [
+      "Standardize input panel.",
+      "Compute covariance matrix.",
+      "Sort eigenpairs and retain leading components."
+    ],
+    "failure_modes": [
+      {
+        "mode": "Running PCA on non-stationary levels",
+        "mitigation": "Use changes/returns and monitor loading drift."
+      }
+    ],
+    "prerequisites": [
+      "Linear algebra basics",
+      "Covariance intuition",
+      "Yield-curve tenor conventions"
+    ],
+    "exports_to_next_chapter": [
+      "factor_scores",
+      "explained_variance"
+    ]
+  },
+  "4": {
+    "title": "Chapter 4: Factor interpretation and regime mapping",
+    "learning_objective": "Translate statistical factors into market narratives and regime tags.",
+    "summary": "Bridges raw factor outputs into interpretable rate regimes used for signal gating and context-aware decisions.",
+    "quotes": [
+      "A factor is useful only when you can name its risk.",
+      "Interpretability is a risk-control requirement, not a reporting feature."
+    ],
+    "market_objects": [
+      "factor loadings",
+      "regime labels",
+      "macro anchors",
+      "signal gates"
+    ],
+    "equations": [
+      {
+        "name": "Regime score",
+        "equation": "regime_score=w^T factor_scores"
+      }
+    ],
+    "derivation_steps": [
+      "Assign economic labels to dominant factors.",
+      "Define regime thresholds on factor composites.",
+      "Validate labels against realized market episodes."
+    ],
+    "failure_modes": [
+      {
+        "mode": "Overfitting regime boundaries",
+        "mitigation": "Use out-of-sample validation and robust threshold bands."
+      }
+    ],
+    "prerequisites": [
+      "Chapter 3 factor outputs",
+      "Macro-rate intuition"
+    ],
+    "exports_to_next_chapter": [
+      "regime_label",
+      "regime_confidence"
+    ]
+  },
+  "5": {
+    "title": "Chapter 5: Duration and convexity diagnostics",
+    "learning_objective": "Translate curve shocks into price response.",
+    "summary": "Applies first- and second-order fixed-income sensitivities to estimate shock-adjusted fair value and slope context.",
+    "quotes": [
+      "Duration is linear memory; convexity is nonlinear correction.",
+      "Approximation error grows faster than most traders expect."
+    ],
+    "market_objects": [
+      "2s10s slope",
+      "duration",
+      "convexity",
+      "shock-adjusted price"
+    ],
+    "equations": [
+      {
+        "name": "Price approximation",
+        "equation": "dP/P\u2248-D*dy+0.5*C*dy^2"
+      }
+    ],
+    "derivation_steps": [
+      "Set rate shock in basis points.",
+      "Convert shock to decimal yield change.",
+      "Apply duration-convexity approximation to fair value."
+    ],
+    "failure_modes": [
+      {
+        "mode": "Using local approximation for large shocks",
+        "mitigation": "Reprice full cashflows for stressed scenarios."
+      }
+    ],
+    "prerequisites": [
+      "Bond math",
+      "Yield curve basics"
+    ],
+    "exports_to_next_chapter": [
+      "fair_price",
+      "curve_slope_bp",
+      "dp_pct"
+    ]
+  },
+  "6": {
+    "title": "Chapter 6: Multi-curve construction",
+    "learning_objective": "Build consistent discount and projection curves for valuation.",
+    "summary": "Introduces collateral-aware discounting and tenor-specific projection curves to avoid valuation inconsistencies.",
+    "quotes": [
+      "Curve choice is a model decision with P&L consequences.",
+      "No-arbitrage requires curve consistency across instruments."
+    ],
+    "market_objects": [
+      "OIS discount curve",
+      "IBOR projection curve",
+      "bootstrapped pillars",
+      "forward rates"
+    ],
+    "equations": [
+      {
+        "name": "Forward from discount factors",
+        "equation": "f(t1,t2)=(P(t1)/P(t2)-1)/(t2-t1)"
+      }
+    ],
+    "derivation_steps": [
+      "Bootstrap discount factors from liquid instruments.",
+      "Construct projection curve on matching accrual conventions.",
+      "Validate cross-instrument pricing residuals."
+    ],
+    "failure_modes": [
+      {
+        "mode": "Mixing curve conventions",
+        "mitigation": "Standardize day-count, calendars, and collateral assumptions."
+      }
+    ],
+    "prerequisites": [
+      "Curve bootstrapping",
+      "Swap market conventions"
+    ],
+    "exports_to_next_chapter": [
+      "discount_factors",
+      "forward_curve"
+    ]
+  },
+  "7": {
+    "title": "Chapter 7: Spread normalization",
+    "learning_objective": "Normalize spreads for comparability across instruments and horizons.",
+    "summary": "Covers spread scaling, z-score style normalization, and liquidity adjustment so signals are cross-sectionally comparable.",
+    "quotes": [
+      "Unnormalized spreads are often incomparable noise.",
+      "Comparability is the prerequisite for ranking."
+    ],
+    "market_objects": [
+      "raw spread",
+      "liquidity premium",
+      "normalized z-score",
+      "ranking bucket"
+    ],
+    "equations": [
+      {
+        "name": "Spread z-score",
+        "equation": "z=(spread-mu)/sigma"
+      }
+    ],
+    "derivation_steps": [
+      "Estimate local mean and volatility.",
+      "Adjust for liquidity and technical premiums.",
+      "Convert adjusted spread into normalized score."
+    ],
+    "failure_modes": [
+      {
+        "mode": "Volatility window mismatch",
+        "mitigation": "Align lookback horizon with strategy holding period."
+      }
+    ],
+    "prerequisites": [
+      "Time-series statistics",
+      "Liquidity diagnostics"
+    ],
+    "exports_to_next_chapter": [
+      "normalized_spread_score",
+      "liquidity_adjusted_spread"
+    ]
+  },
+  "8": {
+    "title": "Chapter 8: Relative-value screens",
+    "learning_objective": "Combine model and market spread views into actionable flags.",
+    "summary": "Builds screening logic that blends valuation residuals, factor context, and execution filters to prioritize opportunities.",
+    "quotes": [
+      "A screen ranks ideas; it does not approve trades.",
+      "Edge decays fastest where crowding is highest."
+    ],
+    "market_objects": [
+      "screen score",
+      "relative-value bucket",
+      "entry threshold",
+      "signal flag"
+    ],
+    "equations": [
+      {
+        "name": "RV score",
+        "equation": "rv_score=w1*valuation_gap+w2*factor_tailwind-w3*cost"
+      }
+    ],
+    "derivation_steps": [
+      "Assemble candidate instruments.",
+      "Compute multi-signal relative-value score.",
+      "Apply threshold and governance filters."
+    ],
+    "failure_modes": [
+      {
+        "mode": "Ignoring implementation constraints",
+        "mitigation": "Embed liquidity, borrow, and balance-sheet filters in screen stage."
+      }
+    ],
+    "prerequisites": [
+      "Valuation residuals",
+      "Factor context",
+      "Cost estimates"
+    ],
+    "exports_to_next_chapter": [
+      "signals",
+      "screen_rank"
+    ]
+  },
+  "9": {
+    "title": "Chapter 9: Trade construction",
+    "learning_objective": "Convert valuation signals into position sizing and implementation checks.",
+    "summary": "Transforms screened ideas into parameterized trade structures with sizing, hedge placeholders, and execution readiness.",
+    "quotes": [
+      "Structure quality often dominates entry timing.",
+      "Sizing is the first line of defense against model error."
+    ],
+    "market_objects": [
+      "position size",
+      "trade legs",
+      "risk budget",
+      "execution plan"
+    ],
+    "equations": [
+      {
+        "name": "Risk-budget sizing",
+        "equation": "size=risk_budget/unit_risk"
+      }
+    ],
+    "derivation_steps": [
+      "Map signal strength into target risk budget.",
+      "Select instrument legs and hedge proxies.",
+      "Run pre-trade implementation checklist."
+    ],
+    "failure_modes": [
+      {
+        "mode": "Sizing off stale risk estimates",
+        "mitigation": "Refresh sensitivities before order release."
+      }
+    ],
+    "prerequisites": [
+      "Signal ranking",
+      "Risk budgeting basics"
+    ],
+    "exports_to_next_chapter": [
+      "position_blueprint",
+      "sizing_recommendation"
+    ]
+  },
+  "10": {
+    "title": "Chapter 10: Execution microstructure",
+    "learning_objective": "Account for microstructure frictions in realized spread capture.",
+    "summary": "Examines slippage, queue dynamics, and venue effects so expected edge is adjusted to realistic realized outcomes.",
+    "quotes": [
+      "Gross edge is hypothetical until microstructure is paid.",
+      "Execution alpha is often process alpha."
+    ],
+    "market_objects": [
+      "bid-ask spread",
+      "market impact",
+      "fill probability",
+      "venue selection"
+    ],
+    "equations": [
+      {
+        "name": "Net edge",
+        "equation": "net_edge=gross_edge-expected_slippage-impact"
+      }
+    ],
+    "derivation_steps": [
+      "Estimate baseline bid-ask and impact costs.",
+      "Model fill probability by urgency and venue.",
+      "Update expected net edge before execution."
+    ],
+    "failure_modes": [
+      {
+        "mode": "Static slippage assumptions",
+        "mitigation": "Condition cost model on volatility and liquidity regime."
+      }
+    ],
+    "prerequisites": [
+      "Chapter 9 trade blueprint",
+      "Market microstructure basics"
+    ],
+    "exports_to_next_chapter": [
+      "execution_cost_model",
+      "expected_fill_quality"
+    ]
+  },
+  "11": {
+    "title": "Chapter 11: Reference-rate transition",
+    "learning_objective": "Measure fallback economics moving from LIBOR-style fixings into RFR compounding.",
+    "summary": "Quantifies fallback spread and all-in coupon effects under benchmark migration from legacy term rates to compounded RFRs.",
+    "quotes": [
+      "Fallback math is contract math before it is market math.",
+      "Day-count mismatches can dominate small spread edges."
+    ],
+    "market_objects": [
+      "legacy fixing",
+      "compounded RFR",
+      "fallback spread",
+      "all-in coupon"
+    ],
+    "equations": [
+      {
+        "name": "Fallback spread",
+        "equation": "fallback_bp=(legacy_fixing-rfr_compounded)*100"
+      },
+      {
+        "name": "All-in coupon",
+        "equation": "all_in_pct=rfr_compounded+fallback_adj/100"
+      }
+    ],
+    "derivation_steps": [
+      "Collect matched legacy and RFR observations.",
+      "Convert difference into fallback basis points.",
+      "Apply contractual adjustment to estimate all-in coupon."
+    ],
+    "failure_modes": [
+      {
+        "mode": "Convention mismatch across legs",
+        "mitigation": "Normalize day-count and accrual calendars before comparison."
+      }
+    ],
+    "prerequisites": [
+      "Floating-rate note mechanics",
+      "Benchmark transition terminology"
+    ],
+    "exports_to_next_chapter": [
+      "fallback_spread_bp",
+      "all_in_coupon_pct",
+      "coupon_vs_legacy_bp"
+    ]
+  },
+  "12": {
+    "title": "Chapter 12: Asset-swap decomposition",
+    "learning_objective": "Split bond carry into curve, credit, and package-adjusted asset-swap spread.",
+    "summary": "Decomposes package spread into coupon mismatch and financing drag to isolate executable carry.",
+    "quotes": [
+      "Package carry is signal after funding, not before.",
+      "Benchmark misalignment can fake alpha."
+    ],
+    "market_objects": [
+      "z-spread",
+      "par swap rate",
+      "coupon mismatch",
+      "package carry"
+    ],
+    "equations": [
+      {
+        "name": "Asset-swap spread",
+        "equation": "ass_bp=z_spread_bp-(bond_coupon-swap_rate)*100"
+      },
+      {
+        "name": "Package carry",
+        "equation": "carry_bp=ass_bp-repo_haircut_bp"
+      }
+    ],
+    "derivation_steps": [
+      "Measure z-spread and matched swap rate.",
+      "Translate coupon mismatch into basis points.",
+      "Subtract financing drag for package carry."
+    ],
+    "failure_modes": [
+      {
+        "mode": "Wrong curve basis",
+        "mitigation": "Align discount/projection setup with CSA and trade terms."
+      }
+    ],
+    "prerequisites": [
+      "Swap pricing conventions",
+      "Funding cost modeling"
+    ],
+    "exports_to_next_chapter": [
+      "asset_swap_spread_bp",
+      "package_carry_bp",
+      "coupon_mismatch_bp"
+    ]
+  },
+  "13": {
+    "title": "Chapter 13: Pure-credit extraction",
+    "learning_objective": "Isolate default-risk premium by stripping liquidity and technical basis effects.",
+    "summary": "Separates observed spread into default and non-default components and maps pure-credit spread into hazard-rate proxies.",
+    "quotes": [
+      "Pure credit is a residual, so component hygiene matters.",
+      "Recovery assumptions are leverage points in hazard inference."
+    ],
+    "market_objects": [
+      "observed spread",
+      "liquidity premium",
+      "technical basis",
+      "hazard estimate"
+    ],
+    "equations": [
+      {
+        "name": "Pure credit",
+        "equation": "pure_credit_bp=observed_spread_bp-liquidity_bp-technical_bp"
+      },
+      {
+        "name": "Default intensity proxy",
+        "equation": "hazard=pure_credit_bp/(10000*(1-recovery))"
+      }
+    ],
+    "derivation_steps": [
+      "Start from observed package spread.",
+      "Subtract liquidity and technical components.",
+      "Map residual spread to hazard proxy via recovery assumption."
+    ],
+    "failure_modes": [
+      {
+        "mode": "Double-counting liquidity effects",
+        "mitigation": "Use orthogonal proxies and reconciliation checks."
+      }
+    ],
+    "prerequisites": [
+      "Chapter 12 outputs",
+      "Credit spread decomposition"
+    ],
+    "exports_to_next_chapter": [
+      "pure_credit_bp",
+      "implied_hazard_rate"
+    ]
+  },
+  "14": {
+    "title": "Chapter 14: Executable trade design",
+    "learning_objective": "Convert spread signals into sized trades with slippage-aware entry filters.",
+    "summary": "Applies cost-aware thresholds and confidence scaling to decide whether a modeled opportunity should be released for execution.",
+    "quotes": [
+      "Execution confidence should shrink faster than edge in stressed liquidity.",
+      "Thresholds are governance tools, not optimization artifacts."
+    ],
+    "market_objects": [
+      "signal edge",
+      "transaction costs",
+      "entry threshold",
+      "execute flag"
+    ],
+    "equations": [
+      {
+        "name": "Expected edge",
+        "equation": "edge_bp=signal_bp-transaction_cost_bp"
+      },
+      {
+        "name": "Execution confidence",
+        "equation": "confidence=edge_bp/entry_threshold_bp"
+      }
+    ],
+    "derivation_steps": [
+      "Estimate pre-cost signal edge.",
+      "Subtract transaction and slippage costs.",
+      "Scale confidence and gate execution decision."
+    ],
+    "failure_modes": [
+      {
+        "mode": "Underestimated impact costs",
+        "mitigation": "Calibrate costs by size, venue, and volatility regime."
+      }
+    ],
+    "prerequisites": [
+      "Chapter 13 pure-credit signal",
+      "Execution cost model"
+    ],
+    "exports_to_next_chapter": [
+      "net_edge_bp",
+      "execution_confidence",
+      "execute_flag"
+    ]
+  },
+  "15": {
+    "title": "Chapter 15: Carry and rolldown budgeting",
+    "learning_objective": "Project forward P&L from carry and curve roll under realistic holding windows.",
+    "summary": "Builds forward return estimates from carry and rolldown, net of implementation costs and horizon assumptions.",
+    "quotes": [
+      "Carry is time income only if position survives path risk.",
+      "Budgeting errors compound when horizons are misaligned."
+    ],
+    "market_objects": [
+      "notional",
+      "carry rate",
+      "rolldown rate",
+      "expected P&L"
+    ],
+    "equations": [
+      {
+        "name": "Carry P&L",
+        "equation": "carry_pnl=notional*(carry_bp/10000)*horizon"
+      },
+      {
+        "name": "Total expected P&L",
+        "equation": "total=carry_pnl+rolldown_pnl-costs"
+      }
+    ],
+    "derivation_steps": [
+      "Set notional and holding horizon.",
+      "Compute carry and rolldown contributions.",
+      "Subtract implementation costs for net expected P&L."
+    ],
+    "failure_modes": [
+      {
+        "mode": "Assuming static curve shape",
+        "mitigation": "Run multi-scenario curve migrations with convexity."
+      }
+    ],
+    "prerequisites": [
+      "Chapter 14 executable flags",
+      "Return attribution basics"
+    ],
+    "exports_to_next_chapter": [
+      "carry_pnl",
+      "rolldown_pnl",
+      "expected_total_pnl"
+    ]
+  },
+  "16": {
+    "title": "Chapter 16: Hedge calibration",
+    "learning_objective": "Size macro and idiosyncratic hedges to keep spread trades inside risk budgets.",
+    "summary": "Calibrates hedge ratios using DV01 targets and residual risk constraints for portfolio-consistent risk control.",
+    "quotes": [
+      "Perfect hedges are rare; controlled residuals are the goal.",
+      "Sensitivity freshness matters as much as sensitivity precision."
+    ],
+    "market_objects": [
+      "trade DV01",
+      "hedge DV01",
+      "target residual",
+      "hedge ratio"
+    ],
+    "equations": [
+      {
+        "name": "Hedge ratio",
+        "equation": "hedge_ratio=target_dv01/hedge_dv01"
+      },
+      {
+        "name": "Residual DV01",
+        "equation": "residual=trade_dv01-hedge_ratio*hedge_dv01"
+      }
+    ],
+    "derivation_steps": [
+      "Estimate trade and hedge instrument DV01.",
+      "Solve for hedge units under residual-risk target.",
+      "Validate realized residual against limits."
+    ],
+    "failure_modes": [
+      {
+        "mode": "Proxy basis mismatch",
+        "mitigation": "Use multi-factor hedge baskets and beta stability checks."
+      }
+    ],
+    "prerequisites": [
+      "Chapter 15 P&L budget",
+      "Interest-rate sensitivity measures"
+    ],
+    "exports_to_next_chapter": [
+      "hedge_ratio_units",
+      "realized_residual_dv01"
+    ]
+  },
+  "17": {
+    "title": "Chapter 17: Scenario and stress engine",
+    "learning_objective": "Quantify trade robustness under spread, rates, and liquidity shock combinations.",
+    "summary": "Computes stressed P&L envelopes from spread/rate sensitivities and liquidity penalties for downside governance.",
+    "quotes": [
+      "Stress testing is about joint moves, not single shocks.",
+      "Liquidity penalties belong in risk, not post-mortems."
+    ],
+    "market_objects": [
+      "spread shock",
+      "rate shock",
+      "CS01/DV01",
+      "liquidity penalty"
+    ],
+    "equations": [
+      {
+        "name": "Stress P&L",
+        "equation": "stress_pnl=-(spread_shock_bp*cs01 + rate_shock_bp*dv01)"
+      },
+      {
+        "name": "Total stress",
+        "equation": "total_stress=stress_pnl-liquidity_penalty"
+      }
+    ],
+    "derivation_steps": [
+      "Define coherent spread and rate shock vectors.",
+      "Apply sensitivities to compute mark-to-market stress loss.",
+      "Subtract liquidity liquidation add-on."
+    ],
+    "failure_modes": [
+      {
+        "mode": "Single-factor stress assumptions",
+        "mitigation": "Use correlated multi-factor stress sets."
+      }
+    ],
+    "prerequisites": [
+      "Chapter 16 hedge output",
+      "Stress-testing framework"
+    ],
+    "exports_to_next_chapter": [
+      "core_stress_pnl",
+      "total_stress_pnl"
+    ]
+  },
+  "18": {
+    "title": "Chapter 18: Capital shadow costs",
+    "learning_objective": "Price capital usage and funding frictions into final trade acceptance decisions.",
+    "summary": "Final governance layer that nets expected alpha against capital and funding charges to determine approval readiness.",
+    "quotes": [
+      "Positive gross alpha can still fail economic value tests.",
+      "Capital is a scarce input, not a free buffer."
+    ],
+    "market_objects": [
+      "expected P&L",
+      "economic capital",
+      "hurdle rate",
+      "approval flag"
+    ],
+    "equations": [
+      {
+        "name": "Capital charge",
+        "equation": "capital_charge=capital_used*capital_hurdle"
+      },
+      {
+        "name": "Risk-adjusted alpha",
+        "equation": "raa=expected_pnl-capital_charge-funding_charge"
+      }
+    ],
+    "derivation_steps": [
+      "Estimate forward expected P&L.",
+      "Compute capital and funding shadow charges.",
+      "Approve only if risk-adjusted alpha remains positive."
+    ],
+    "failure_modes": [
+      {
+        "mode": "Understated hurdle rate",
+        "mitigation": "Align hurdle assumptions with current treasury transfer pricing."
+      }
+    ],
+    "prerequisites": [
+      "Chapter 17 stress envelope",
+      "Internal capital policy"
+    ],
+    "exports_to_next_chapter": [
+      "capital_charge",
+      "risk_adjusted_alpha",
+      "approval_flag"
+    ]
+  }
+}
