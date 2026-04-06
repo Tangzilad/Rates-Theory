@@ -1,8 +1,16 @@
 import json
+from dataclasses import is_dataclass
 from pathlib import Path
 from typing import Dict, Optional, Tuple
 
 import streamlit as st
+from core.diagnostics import validate_boundary
+from core.types import (
+    ExecutableTradeState,
+    FactorState,
+    MeanReversionState,
+    RiskMetricState,
+)
 from src.chapter_summary_schema import (
     ChapterSummarySchemaError,
     document_to_chapter_map,
@@ -79,12 +87,27 @@ def render_chapter_header(chapter_data: dict, chapter_meta: dict) -> None:
             st.write("No quotes available.")
 
 
-def render_contract_section(title: str, payload) -> None:
+def normalize_payload(payload: Any) -> Any:
+    if is_dataclass(payload):
+        return payload.model_dump() if hasattr(payload, "model_dump") else payload
+    return payload
+
+
+def render_contract_section(title: str, payload: Any) -> None:
     st.subheader(title)
-    if isinstance(payload, (dict, list)):
-        st.json(payload)
+    normalized = normalize_payload(payload)
+    if isinstance(normalized, (dict, list)):
+        st.json(normalized)
     else:
-        st.write(payload)
+        st.write(normalized)
+
+
+CHAPTER_BOUNDARY_RULES: dict[str, dict[str, type]] = {
+    "2": {"1": ExecutableTradeState},
+    "3": {"2": MeanReversionState},
+    "5": {"3": FactorState},
+    "8": {"5": RiskMetricState},
+}
 
 
 def render_chapter_contract(selected_key: str) -> None:
@@ -124,9 +147,17 @@ def render_chapter_contract(selected_key: str) -> None:
         render_contract_section("Derivation Steps", chapter.derivation_steps())
     with tabs[4]:
         st.subheader("Interactive Lab")
-        lab_payload = chapter.interactive_lab()
-        st.caption("Structured lab payload")
-        st.json(lab_payload)
+        errors = validate_boundary(selected_key, CHAPTER_BOUNDARY_RULES.get(selected_key, {}), upstream_exports)
+        if errors:
+            st.error("Upstream export validation failed:")
+            for err in errors:
+                st.markdown(f"- {err}")
+            st.caption("Run prerequisite chapter labs to populate validated upstream exports.")
+        else:
+            lab_payload = chapter.interactive_lab()
+            upstream_exports[selected_key] = lab_payload
+            st.caption("Structured lab payload")
+            st.json(normalize_payload(lab_payload))
     with tabs[5]:
         render_contract_section("Case Studies", chapter.case_studies())
     with tabs[6]:

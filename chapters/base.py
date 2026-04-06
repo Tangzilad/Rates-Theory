@@ -32,7 +32,7 @@ class ChapterBase(ABC):
         """Return derivation sequence in compact bullet form."""
 
     @abstractmethod
-    def interactive_lab(self) -> Dict[str, Any]:
+    def interactive_lab(self) -> Any:
         """Render chapter lab widgets and return computed payload."""
 
     @abstractmethod
@@ -48,5 +48,5 @@ class ChapterBase(ABC):
         """Return assessment prompts and expected direction."""
 
     @abstractmethod
-    def exports_to_next_chapter(self) -> Dict[str, Any]:
+    def exports_to_next_chapter(self) -> Any:
         """Return explicit outputs that feed later chapters."""

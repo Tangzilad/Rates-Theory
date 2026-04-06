@@ -6,6 +6,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import streamlit as st
 
+from core.derivations import ou_half_life_days
+from core.types import ChapterExportState, MeanReversionState
+from src.models.mean_reversion import sharpe_ratio, simulate_ou
+
 from .base import ChapterBase
 
 
@@ -27,7 +31,7 @@ class Chapter02(ChapterBase):
     def derivation_steps(self) -> List[str]:
         return ["Discretize the SDE with Euler-Maruyama.", "Generate paths with Gaussian shocks.", "Compute barrier-hitting statistics."]
 
-    def interactive_lab(self) -> Dict[str, Any]:
+    def interactive_lab(self) -> MeanReversionState:
         c1, c2, c3, c4 = st.columns(4)
         theta = c1.slider("Mean reversion speed (theta)", 0.05, 3.0, 1.0, 0.05)
         mu = c2.number_input("Long-run mean (mu)", value=0.0, step=0.1)
@@ -37,16 +41,12 @@ class Chapter02(ChapterBase):
 
         n_steps = 252
         n_paths = 400
-        dt = 1 / 252
-        rng = np.random.default_rng(7)
-        x = np.full((n_paths, n_steps), x0, dtype=float)
-        for t in range(1, n_steps):
-            x[:, t] = x[:, t - 1] + theta * (mu - x[:, t - 1]) * dt + sigma * np.sqrt(dt) * rng.standard_normal(n_paths)
+        paths = simulate_ou(x0=x0, theta=theta, mu=mu, sigma=sigma, n_steps=n_steps - 1, n_paths=n_paths, random_seed=7)
 
-        pnl = x[:, -1] - x[:, 0]
-        sharpe = float(np.mean(pnl) / np.std(pnl)) if np.std(pnl) > 0 else float("nan")
+        pnl = paths[:, -1] - paths[:, 0]
+        sharpe = float(sharpe_ratio(pnl, annualize=False)) if np.std(pnl) > 0 else float("nan")
 
-        hit_mask = x <= barrier
+        hit_mask = paths <= barrier
         first_hit = np.argmax(hit_mask, axis=1)
         no_hit = ~hit_mask.any(axis=1)
         first_hit[no_hit] = n_steps
@@ -54,7 +54,7 @@ class Chapter02(ChapterBase):
 
         fig, ax = plt.subplots(figsize=(8, 4))
         for i in range(min(40, n_paths)):
-            ax.plot(x[i], alpha=0.35, linewidth=0.8)
+            ax.plot(paths[i], alpha=0.35, linewidth=0.8)
         ax.axhline(mu, color="black", linestyle="--", label="mu")
         ax.axhline(barrier, color="red", linestyle=":", label="barrier")
         ax.set_title("Simulated OU paths")
@@ -65,11 +65,23 @@ class Chapter02(ChapterBase):
 
         hit_prob = float(np.nanmean(~np.isnan(fpt_days)))
         mean_fpt = float(np.nanmean(fpt_days)) if np.isfinite(np.nanmean(fpt_days)) else None
+        half_life = ou_half_life_days(theta)
         st.metric("Estimated first-passage probability", f"{hit_prob:.2%}")
         st.metric("Mean first-passage time (days)", f"{mean_fpt:.1f}" if mean_fpt is not None else "No hits")
         st.metric("Terminal Sharpe (simulated)", f"{sharpe:.3f}" if np.isfinite(sharpe) else "N/A")
+        st.metric("Half-life estimate (days)", f"{half_life:.1f}" if half_life is not None else "N/A")
 
-        return {"inputs": {"theta": theta, "mu": mu, "sigma": sigma, "x0": x0, "barrier": barrier}, "outputs": {"hit_probability": hit_prob, "mean_fpt_days": mean_fpt, "terminal_sharpe": sharpe}}
+        return MeanReversionState(
+            theta=theta,
+            mu=mu,
+            sigma=sigma,
+            x0=x0,
+            barrier=barrier,
+            hit_probability=hit_prob,
+            mean_fpt_days=mean_fpt,
+            terminal_sharpe=sharpe,
+            half_life_days=half_life,
+        )
 
     def case_studies(self) -> List[Dict[str, str]]:
         return [{"name": "Spread convergence trade", "setup": "Entry on 2-sigma deviation", "takeaway": "Half-life should match expected holding window."}]
@@ -80,5 +92,9 @@ class Chapter02(ChapterBase):
     def assessment(self) -> List[Dict[str, str]]:
         return [{"prompt": "What happens to first-passage time as theta increases?", "expected": "Barrier is generally hit faster when mean is on the barrier side."}]
 
-    def exports_to_next_chapter(self) -> Dict[str, Any]:
-        return {"signals": ["half_life_proxy", "hit_probability"], "usage": "Inputs for PCA-based factor-aware signal timing."}
+    def exports_to_next_chapter(self) -> ChapterExportState:
+        return ChapterExportState(
+            signals=["half_life_days", "hit_probability", "terminal_sharpe"],
+            usage="Inputs for PCA-based factor-aware signal timing.",
+            schema_name="MeanReversionState",
+        )
