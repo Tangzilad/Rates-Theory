@@ -121,6 +121,26 @@ class FundingBasisState(_TypedState):
 
 
 @dataclass(frozen=True)
+class RecoverySensitivityPoint(_TypedState):
+    recovery_rate: float
+    hazard_proxy: float
+    d_hazard_d_recovery: float
+
+
+@dataclass(frozen=True)
+class PureCreditState(_TypedState):
+    observed_spread_bp: float
+    liquidity_component_bp: float
+    technical_component_bp: float
+    purified_spread_bp: float
+    hazard_proxy: float
+    recovery_rate: float
+    d_hazard_d_recovery: float
+    recovery_sensitivity_scenarios: list[RecoverySensitivityPoint]
+    simplification_notes: list[str]
+
+
+@dataclass(frozen=True)
 class FuturesBasisState(_TypedState):
     utilization: float
     headroom: float
