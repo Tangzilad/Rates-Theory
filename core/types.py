@@ -115,10 +115,62 @@ class MultiCurveState(_TypedState):
 
 @dataclass(frozen=True)
 class FundingBasisState(_TypedState):
-    swap_spread_bp: float
+    funding_basis_bp: float
+    adjusted_fair_spread_bp: float
+    net_carry_bp: float
+
+
+@dataclass(frozen=True)
+class FuturesBasisState(_TypedState):
+    utilization: float
+    headroom: float
+    status: str
+    approved: bool
+
+
+@dataclass(frozen=True)
+class CurveFairValueState(_TypedState):
+    model_fair_value_bp: float
+    market_observed_bp: float
+    residual_bp: float
+    z_score: float
+    trade_signal: str
+    confidence: float
+
+
+@dataclass(frozen=True)
+class GovBondTradeBlueprint(_TypedState):
+    trade_name: str
+    entry_leg: str
+    hedge_leg: str
+    target_notional_mm: float
+    hedge_ratio: float
+    expected_edge_bp: float
+    dv01_neutrality_gap_usd_per_bp: float
+    stop_loss_bp: float
+    take_profit_bp: float
+    approved: bool
+
+
+@dataclass(frozen=True)
+class ReferenceRateState(_TypedState):
+    legacy_fixing_pct: float
+    rfr_compounded_pct: float
+    contract_adjustment_bp: float
+    fallback_spread_bp: float
+    all_in_coupon_pct: float
+    coupon_vs_legacy_bp: float
+
+
+@dataclass(frozen=True)
+class AssetSwapState(_TypedState):
+    z_spread_bp: float
+    bond_coupon_pct: float
+    swap_rate_pct: float
+    repo_drag_bp: float
+    coupon_mismatch_bp: float
     asset_swap_spread_bp: float
-    tenor_basis_bp: float
-    cross_currency_basis_bp: float
+    package_carry_bp: float
 
 
 @dataclass(frozen=True)

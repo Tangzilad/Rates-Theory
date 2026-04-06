@@ -28,7 +28,7 @@ class Chapter12(SimpleChapter):
             "Stress funding by +1bp shocks using linear sensitivity (no full CSA-consistent repricing).",
         ]
 
-    def interactive_lab(self) -> dict[str, dict[str, float]]:
+    def interactive_lab(self) -> AssetSwapState:
         z_spread = st.number_input("Bond z-spread (bp)", value=92.0, step=1.0, key="z_12")
         bond_coupon = st.number_input("Bond coupon (%)", value=4.15, step=0.01, key="coupon_12")
         benchmark_type = st.radio("Benchmark mode", options=["Par swap", "Reference rate"], horizontal=True, key="bench_type_12")

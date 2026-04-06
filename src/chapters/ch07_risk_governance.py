@@ -3,6 +3,8 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
+from core.types import ChapterExportState, FuturesBasisState
+
 from .base import ChapterBase
 
 
