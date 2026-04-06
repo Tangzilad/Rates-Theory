@@ -1,7 +1,7 @@
 import json
 from dataclasses import is_dataclass
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 import streamlit as st
 from core.diagnostics import validate_boundary
@@ -17,7 +17,7 @@ from src.chapter_summary_schema import (
     legacy_map_to_document,
 )
 
-from chapters import build_chapter_registry, get_chapter
+from chapters import build_chapter_registry, get_chapter, validate_chapter_dependencies
 
 
 st.set_page_config(page_title="Rates Theory Lab", layout="wide")
@@ -112,8 +112,17 @@ CHAPTER_BOUNDARY_RULES: dict[str, dict[str, type]] = {
 
 def render_chapter_contract(selected_key: str) -> None:
     registry = build_chapter_registry()
-    chapter = get_chapter(selected_key, registry)
-    upstream_exports = st.session_state.setdefault("chapter_exports", {})
+    validation_result = validate_chapter_dependencies(registry)
+    blocking_issues = validation_result.blocking_issues_for(selected_key)
+    if blocking_issues:
+        st.error("Chapter dependency validation failed. Resolve the following before loading this chapter:")
+        for issue in blocking_issues:
+            prefix = "ERROR" if issue.severity == "error" else "WARNING"
+            st.write(f"- [{prefix}] Chapter {issue.chapter}: {issue.message}")
+        if any(issue.severity == "error" for issue in blocking_issues):
+            st.stop()
+
+    chapter = get_chapter(selected_key, registry, validation_result=validation_result)
 
     tab_labels = [
         "Prerequisites",
@@ -170,7 +179,9 @@ if chapter_summary_error:
 chapter_keys = sorted(chapter_data_map.keys(), key=chapter_key_sorter)
 selected_key = st.sidebar.selectbox("Select chapter", chapter_keys, index=0)
 chapter_data = chapter_data_map[selected_key]
-chapter_meta = get_chapter(selected_key, build_chapter_registry()).chapter_meta()
+registry = build_chapter_registry()
+validation_result = validate_chapter_dependencies(registry)
+chapter_meta = get_chapter(selected_key, registry, validation_result=validation_result).chapter_meta()
 render_chapter_header(chapter_data, chapter_meta)
 render_chapter_contract(selected_key)
 

@@ -44,9 +44,33 @@ class SwapBasisChapter(SimpleChapter):
         st.metric("Intra-currency basis (bp)", f"{tenor_basis:.2f}")
         st.metric("Cross-currency basis (bp)", f"{xccy_basis:.2f}")
 
-        return FundingBasisState(
-            swap_spread_bp=swap_spread,
-            asset_swap_spread_bp=asw_spread,
-            tenor_basis_bp=tenor_basis,
-            cross_currency_basis_bp=xccy_basis,
-        )
+        return {
+            "inputs": {
+                "swap_rate": swap_rate,
+                "gov_yield": gov_yield,
+                "bond_coupon": bond_coupon,
+                "z_spread": z_spread,
+                "tenor_short": tenor_short,
+                "tenor_long": tenor_long,
+                "usd_leg": usd_leg,
+                "eur_leg": eur_leg,
+                "fx_hedge_cost": fx_hedge_cost,
+            },
+            "outputs": {
+                "swap_spread_bp": swap_spread,
+                "asset_swap_spread_bp": asset_swap_spread,
+                "tenor_basis_bp": tenor_basis,
+                "cross_currency_basis_bp": xccy_basis,
+            },
+        }
+
+    def exports_to_next_chapter(self) -> Dict[str, Any]:
+        return {
+            "signals": [
+                "swap_spread_bp",
+                "asset_swap_spread_bp",
+                "tenor_basis_bp",
+                "cross_currency_basis_bp",
+            ],
+            "usage": "Forward swap and basis diagnostics to the next module in the sequence.",
+        }
