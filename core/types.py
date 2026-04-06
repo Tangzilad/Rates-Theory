@@ -49,6 +49,18 @@ class JointSpreadState(_TypedState):
     factors: FactorState | None = None
 
 
+
+
+@dataclass(frozen=True)
+class RelativeValueState(_TypedState):
+    fair_value: float
+    market_value: float
+    residual: float
+    direction: str
+    confidence: float
+    friction_notes: list[str]
+
+
 @dataclass(frozen=True)
 class RiskMetricState(_TypedState):
     curve_slope_bp: float
