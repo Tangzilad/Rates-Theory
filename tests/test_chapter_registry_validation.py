@@ -55,6 +55,15 @@ def test_chapters_7_to_12_dependencies_are_chronological() -> None:
             assert int(provider_key) < int(chapter_key)
 
 
+def test_chapters_13_to_18_dependency_keys_are_explicit() -> None:
+    assert CHAPTER_DEPENDENCIES["13"] == {"12": ["asset_swap_spread_bp", "package_carry_bp"]}
+    assert CHAPTER_DEPENDENCIES["14"] == {"13": ["pure_credit_bp"]}
+    assert CHAPTER_DEPENDENCIES["15"] == {"14": ["execution_confidence"]}
+    assert CHAPTER_DEPENDENCIES["16"] == {"15": ["expected_total_pnl"]}
+    assert CHAPTER_DEPENDENCIES["17"] == {"16": ["realized_residual_dv01"]}
+    assert CHAPTER_DEPENDENCIES["18"] == {"17": ["total_stress_pnl"]}
+
+
 def test_registry_builds_all_18_chapters_without_missing_keys_regression() -> None:
     registry = build_chapter_registry()
     assert list(registry.keys()) == [str(i) for i in range(1, 19)]
