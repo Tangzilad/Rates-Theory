@@ -11,7 +11,7 @@ from .ch02_mean_reversion import Chapter02
 from .ch03_factor_pca import Chapter03
 from .ch04_spread_signals import Chapter04
 from .ch05_duration_convexity import Chapter05
-from .ch06_portfolio_construction import Chapter06
+from .ch06_yield_curve_models import Chapter06
 from .ch07_risk_governance import Chapter07
 from .ch08_relative_value_screens import Chapter08
 from .ch09_trade_construction import Chapter09
@@ -33,7 +33,7 @@ CHAPTER_DEPENDENCIES: dict[str, dict[str, list[str]]] = {
     "4": {"3": ["explained_variance"]},
     "5": {"4": ["z_score"]},
     "6": {"5": ["fair_price", "curve_slope_bp"]},
-    "7": {"6": ["feasible_weight"]},
+    "7": {"6": ["zero_curve", "residual_diagnostics"]},
     "8": {"7": ["approved"]},
     "9": {"8": ["scenario_value"]},
     "10": {"9": ["scenario_value"]},

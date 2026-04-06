@@ -68,6 +68,32 @@ class FundingBasisState(_TypedState):
 
 
 @dataclass(frozen=True)
+class CurvePoint(_TypedState):
+    maturity_years: float
+    rate_pct: float
+
+
+@dataclass(frozen=True)
+class ResidualDiagnosticsState(_TypedState):
+    rmse_nss_bp: float
+    rmse_interp_bp: float
+    mean_abs_nss_bp: float
+    mean_abs_interp_bp: float
+    max_abs_nss_bp: float
+    max_abs_interp_bp: float
+
+
+@dataclass(frozen=True)
+class YieldCurveModelState(_TypedState):
+    par_curve: list[CurvePoint]
+    zero_curve: list[CurvePoint]
+    forward_curve: list[CurvePoint]
+    fit_params: dict[str, float]
+    interpolation_settings: dict[str, float | str]
+    residual_diagnostics: ResidualDiagnosticsState
+
+
+@dataclass(frozen=True)
 class ExecutionSignalState(_TypedState):
     action: str
     confidence: float
