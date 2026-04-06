@@ -264,11 +264,21 @@ def render_learn_tab(
     if summary:
         st.markdown(summary)
 
+    learn_focus = _resolve(chapter, chapter_data, "learn_focus", ["learn_focus"], [])
+    if isinstance(learn_focus, list) and learn_focus:
+        with st.container(border=True):
+            st.markdown("**Why this chapter matters**")
+            render_bulleted_lines(learn_focus)
+
     core_claim = _resolve(
         chapter, chapter_data, "core_claim", ["core_claim", "learning_objective"], ""
     )
     if core_claim:
         st.info(f"**Core claim:** {core_claim}")
+
+    key_takeaway = _resolve(chapter, chapter_data, "key_takeaway", ["key_takeaway"], "")
+    if isinstance(key_takeaway, str) and key_takeaway:
+        st.success(f"**Key takeaway:** {key_takeaway}")
 
     quotes = chapter_data.get("quotes", [])
     if quotes:
@@ -288,9 +298,7 @@ def render_learn_tab(
 
     st.markdown("---")
     st.subheader("Common Confusions")
-    failure_modes = _resolve(
-        chapter, chapter_data, "failure_modes_model_risk", ["failure_modes"], []
-    )
+    failure_modes = _resolve(chapter, chapter_data, "common_confusions", ["failure_modes"], [])
     limit = 2 if study_mode else len(failure_modes)
     shown = failure_modes[:limit] if isinstance(failure_modes, list) else []
     if shown:
@@ -327,6 +335,13 @@ def render_derive_tab(
         chapter, chapter_data, "derivation", ["derivation_steps", "step_by_step_derivation"], []
     )
     render_derivation_body(derivation)
+
+    derive_focus = _resolve(chapter, chapter_data, "derive_focus", ["derive_focus"], [])
+    if isinstance(derive_focus, list) and derive_focus:
+        st.markdown("---")
+        with st.container(border=True):
+            st.markdown("**Derivation intuition**")
+            render_bulleted_lines(derive_focus)
 
     if not study_mode:
         exports = _resolve(
@@ -390,6 +405,12 @@ def render_trade_use_tab(
             st.markdown(f"- {item}")
     else:
         st.caption("No trade interpretation defined.")
+
+    trade_focus = _resolve(chapter, chapter_data, "trade_use_focus", ["trade_use_focus"], [])
+    if isinstance(trade_focus, list) and trade_focus:
+        with st.container(border=True):
+            st.markdown("**Trader playbook**")
+            render_bulleted_lines(trade_focus)
 
     st.markdown("---")
     st.subheader("Desk Relevance")

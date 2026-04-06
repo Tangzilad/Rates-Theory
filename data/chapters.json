@@ -477,19 +477,21 @@
     ]
   },
   "10": {
-    "title": "Chapter 10: Overview of Mutual Influences in Rates Markets",
-    "learning_objective": "Map swap-block dependencies and feedback loops across sovereign, swap, funding, and credit-linked rates markets.",
-    "summary": "Builds a dependency map showing how government curves, swap spreads, basis, collateral funding, and credit premia co-move, and identifies channels through which shocks propagate.",
+    "title": "Chapter 10: Funding basis dependency map",
+    "learning_objective": "Build a dependency-first mental model so later chapter analytics are interpreted in correct repricing order.",
+    "summary": "Bridge chapter that maps how bond, repo, reference rates, asset swaps, CDS, intra-currency basis swaps, and cross-currency basis swaps transmit shocks into each other before detailed modeling in Chapters 11-15.",
     "quotes": [
       "Swap blocks are coupled systems, not isolated valuation modules.",
       "Dependency maps turn correlation anecdotes into causal hypotheses."
     ],
     "market_objects": [
-      "government yield curve",
-      "swap spread curve",
-      "OIS-LIBOR/SOFR basis block",
-      "repo specialness node",
-      "credit-funding channel"
+      "Bond",
+      "Repo",
+      "Reference rate",
+      "Asset swap",
+      "CDS",
+      "Intra-currency basis swap",
+      "Cross-currency basis swap"
     ],
     "equations": [
       {
@@ -511,42 +513,54 @@
       "Run shock-propagation scenarios to quantify first- and second-round impacts on valuation and hedge blocks."
     ],
     "failure_modes": [
-      {
-        "mode": "Treating contemporaneous correlation as causality",
-        "mitigation": "Use lagged identification checks and economic sign restrictions."
-      },
-      {
-        "mode": "Ignoring nonlinear stress feedbacks",
-        "mitigation": "Augment linear map with regime-specific overrides for funding stress episodes."
-      }
+      "Reading one node in isolation",
+      "Repricing nodes in arbitrary order",
+      "Ignoring chapter handoff assumptions"
     ],
     "prerequisites": [
-      "Chapter 9 analytics process outputs",
-      "Swap spread and basis definitions",
-      "Matrix-based factor modeling"
+      "Cash bond valuation conventions",
+      "Repo financing and balance-sheet frictions",
+      "Basis swap and CDS intuition"
     ],
     "exports_to_next_chapter": [
-      "swap_block_dependency_map",
-      "shock_transmission_matrix",
-      "dominant_influence_channels",
-      "hedge_contagion_flags",
-      "regime_specific_linkages"
-    ]
+      "funding_basis_bp",
+      "asset_swap_spread_bp",
+      "cds_bond_basis_bp",
+      "cross_currency_basis_bp"
+    ],
+    "technical_equations": [
+      "ASW_bp \u2248 bond_zspread_bp - repo_specialness_bp + collateral/funding_adjustments_bp",
+      "CDS_Basis_bp = CDS_spread_bp - ASW_bp",
+      "ICBS_bp \u2248 tenor_leg_a_bp - tenor_leg_b_bp - benchmark_conversion_adjustments_bp",
+      "CCY_all_in_bp \u2248 CCBS_quote_bp + ICBS_bp + FX_hedge_roll_bp"
+    ],
+    "step_by_step_derivation": [
+      "Anchor bond and repo legs to construct financing-adjusted carry.",
+      "Convert benchmark conventions into intra- and cross-currency basis wedges.",
+      "Reconcile asset-swap and CDS valuations for residual basis attribution.",
+      "Propagate shocks along graph edges to identify first-order repricing order.",
+      "Export graph assumptions into Chapters 11-15."
+    ],
+    "trade_interpretation": [
+      "Use dependency map to separate mechanical funding moves from fundamental credit/rate signals.",
+      "Reprice in graph order before ranking trades."
+    ],
+    "key_takeaway": "Relative-value signals are graph-dependent; wrong repricing order creates false trade narratives."
   },
   "11": {
-    "title": "Chapter 11: Reference Rates",
-    "learning_objective": "Compare and operationalize overnight and term reference rates for pricing, accrual, and risk transfer.",
-    "summary": "Covers construction and usage of SOFR, \u20acSTR, SONIA, and term benchmarks; links compounding conventions to coupon cashflows, discounting, and basis risk.",
+    "title": "Chapter 11: Reference rates, benchmark wedges, and transition",
+    "learning_objective": "Show why benchmark choice itself changes valuation and carry attribution.",
+    "summary": "Broader benchmark chapter covering secured vs unsecured references, repo-vs-reference wedge, benchmark spread decomposition, and fallback transition as one subsection.",
     "quotes": [
       "Reference rate choice is an exposure choice.",
       "Compounding conventions are valuation parameters, not clerical detail."
     ],
     "market_objects": [
-      "SOFR overnight fixings",
-      "term SOFR setting",
-      "compounded-in-arrears index",
-      "fallback spread adjustment",
-      "basis swap quote"
+      "Secured benchmark curve",
+      "Unsecured benchmark curve",
+      "Repo curve",
+      "Benchmark spread decomposition",
+      "Fallback transition overlay"
     ],
     "equations": [
       {
@@ -568,27 +582,43 @@
       "Compare term and compounded benchmarks to isolate basis risk and hedge implications."
     ],
     "failure_modes": [
-      {
-        "mode": "Applying wrong accrual convention",
-        "mitigation": "Implement convention-specific calculators with unit tests for lookback/lockout variants."
-      },
-      {
-        "mode": "Assuming fallback spread is static in risk systems",
-        "mitigation": "Model fallback and basis as explicit stochastic risk factors."
-      }
+      "Treating secured/unsecured basis as pure issuer credit",
+      "Mixing repo regime and benchmark conventions",
+      "Overweighting fallback mechanics"
     ],
     "prerequisites": [
-      "Chapter 10 dependency map context",
-      "Floating-rate cashflow mechanics",
-      "Benchmark transition terminology"
+      "Chapter 10 dependency map",
+      "Money-market benchmark conventions",
+      "Repo funding interpretation"
     ],
     "exports_to_next_chapter": [
-      "compounded_reference_curve",
-      "term_reference_curve",
-      "reference_basis_bp",
-      "fallback_coupon_adjustments",
-      "accrual_convention_flags"
-    ]
+      "benchmark_curve_spread_bp",
+      "spread_term_structure_bp",
+      "secured_unsecured_basis_bp",
+      "repo_reference_basis_bp",
+      "benchmark_spread_decomposition_bp",
+      "fallback_spread_bp",
+      "all_in_coupon_pct"
+    ],
+    "technical_equations": [
+      "curve_spread_bp=(curve_a-curve_b)*100",
+      "secured_unsecured_basis_bp=(unsecured-secured)*100",
+      "repo_reference_basis_bp=(repo-reference)*100",
+      "benchmark_spread_bp = secured_unsecured_basis_bp + repo_reference_basis_bp + transition_overlay_bp",
+      "fallback_spread_bp=(legacy_fixing-compounded_rfr)*100",
+      "all_in_coupon_pct=compounded_rfr+contract_adjustment_bp/100"
+    ],
+    "step_by_step_derivation": [
+      "Compare at least two benchmark curves tenor-by-tenor.",
+      "Decompose benchmark spread into secured/unsecured and repo wedges.",
+      "Layer fallback transition mechanics as contractual overlay only.",
+      "Use decomposition outputs for valuation and asset-swap packaging in Chapter 12."
+    ],
+    "trade_interpretation": [
+      "Avoid false RV signals caused by benchmark mismatch.",
+      "Use repo wedge diagnostics to separate funding stress from benchmark repricing."
+    ],
+    "key_takeaway": "Benchmark choice is a valuation input, not a cosmetic reporting preference."
   },
   "12": {
     "title": "Chapter 12: Asset Swaps",
@@ -648,18 +678,22 @@
     ]
   },
   "13": {
-    "title": "Chapter 13: Pure-credit extraction",
-    "learning_objective": "Isolate default-risk premium by stripping liquidity and technical basis effects.",
-    "summary": "Separates observed spread into default and non-default components and maps pure-credit spread into hazard-rate proxies.",
+    "title": "Chapter 13: CDS premium/protection legs and pure-credit extraction",
+    "learning_objective": "Infer a cleaner default-risk proxy from CDS while explicitly conditioning on recovery and market technicals.",
+    "summary": "Deep CDS pedagogy chapter with premium/protection-leg intuition, recovery sensitivity, and observed-vs-purified credit decomposition including technical contamination.",
     "quotes": [
       "Pure credit is a residual, so component hygiene matters.",
       "Recovery assumptions are leverage points in hazard inference."
     ],
     "market_objects": [
-      "observed spread",
-      "liquidity premium",
-      "technical basis",
-      "hazard estimate"
+      "Observed CDS spread",
+      "Premium leg",
+      "Protection leg",
+      "Recovery assumption",
+      "Liquidity contamination",
+      "Technical contamination",
+      "Purified credit spread",
+      "Hazard proxy"
     ],
     "equations": [
       {
@@ -677,38 +711,32 @@
       "Translate residual spread into implied hazard using an explicit recovery assumption and report sensitivity to recovery grid."
     ],
     "failure_modes": [
-      {
-        "mode": "Liquidity proxy contamination",
-        "mitigation": "Cross-check proxy set (bid-ask, depth, fails) and run orthogonality diagnostics."
-      },
-      {
-        "mode": "Recovery misspecification",
-        "mitigation": "Publish scenario band for recovery and require robustness of signal sign."
-      }
+      "Treating observed CDS as pure default premium",
+      "Using one recovery assumption without sensitivity",
+      "Ignoring delivery-option style technical contamination"
     ],
     "prerequisites": [
-      "Chapter 12 outputs",
-      "Credit spread decomposition"
+      "Chapter 12 asset-swap decomposition outputs",
+      "Credit-derivative contract basics"
     ],
     "exports_to_next_chapter": [
-      "pure_credit_bp",
-      "implied_hazard_rate"
+      "observed_spread_bp",
+      "purified_credit_spread_bp",
+      "hazard_proxy",
+      "recovery_sensitivity"
     ],
     "core_claim": "Observed credit spread must be decomposed into default and non-default components before hazard inferences are tradable.",
     "technical_equations": [
-      {
-        "name": "Pure credit residual",
-        "equation": "pure_credit_bp=observed_spread_bp-liquidity_bp-technical_bp"
-      },
-      {
-        "name": "Hazard-rate proxy",
-        "equation": "lambda_hat=pure_credit_bp/(10000*(1-recovery))"
-      }
+      "purified_credit_spread_bp = observed_spread_bp - liquidity_component_bp - technical_component_bp",
+      "hazard_proxy = purified_credit_spread_bp / (10000*(1-recovery_rate))",
+      "d_hazard_d_recovery = purified_credit_spread_bp / (10000*(1-recovery_rate)^2)"
     ],
     "step_by_step_derivation": [
-      "Begin with all-in observed spread and align measurement windows across bond, CDS, and liquidity proxies.",
-      "Estimate and subtract non-default components (liquidity and technical basis) to isolate pure credit residual.",
-      "Translate residual spread into implied hazard using an explicit recovery assumption and report sensitivity to recovery grid."
+      "Interpret premium leg as running coupon stream containing default and non-default premia.",
+      "Interpret protection leg via expected LGD = (1-recovery).",
+      "Subtract liquidity and technical contamination to obtain purified spread.",
+      "Map purified spread to hazard proxy and stress recovery assumptions.",
+      "Compare raw observed versus purified interpretation before trading."
     ],
     "interactive_lab": {
       "inputs": [
@@ -727,8 +755,8 @@
       ]
     },
     "trade_interpretation": [
-      "Long pure-credit cheapness when residual spread is wide versus peer hazard-implied fair value.",
-      "Size conviction down when hazard estimate is highly sensitive to recovery assumptions."
+      "Use purified spread for cross-instrument credit comparison.",
+      "Downweight signals dominated by technical contamination."
     ],
     "failure_modes_model_risk": [
       {
@@ -751,21 +779,24 @@
         "implied_hazard_rate"
       ],
       "handoff": "Used as credit-clean input for tenor and cross-currency basis packaging."
-    }
+    },
+    "key_takeaway": "Observed CDS requires purification and recovery conditioning before it becomes a default-risk signal."
   },
   "14": {
-    "title": "Chapter 14: Intra-currency basis swaps",
-    "learning_objective": "Measure and trade tenor-basis dislocations within one currency curve while accounting for funding frictions.",
-    "summary": "Applies cost-aware thresholds and confidence scaling to decide whether a modeled opportunity should be released for execution.",
+    "title": "Chapter 14: Intra-currency basis swaps (tenor basis)",
+    "learning_objective": "Turn tenor-basis dislocations into horizon-aware trade decisions rather than spot-only screens.",
+    "summary": "Full same-currency floating-vs-floating basis chapter with observed/fair basis, multi-tenor term structure, carry, rolldown, and execution interpretation.",
     "quotes": [
       "Execution confidence should shrink faster than edge in stressed liquidity.",
       "Thresholds are governance tools, not optimization artifacts."
     ],
     "market_objects": [
-      "signal edge",
-      "transaction costs",
-      "entry threshold",
-      "execute flag"
+      "Observed tenor basis",
+      "Fair tenor basis",
+      "Term structure of basis",
+      "Carry",
+      "Rolldown",
+      "Execution confidence"
     ],
     "equations": [
       {
@@ -783,39 +814,34 @@
       "Convert residual edge into execution confidence and binary release flag via governance threshold."
     ],
     "failure_modes": [
-      {
-        "mode": "Underestimated implementation drag",
-        "mitigation": "Calibrate costs by size/venue and include stressed liquidity add-ons."
-      },
-      {
-        "mode": "Curve-construction inconsistency",
-        "mitigation": "Enforce discount/projection convention checks before signal publication."
-      }
+      "Trading spot basis without carry/rolldown context",
+      "Ignoring implementation drag",
+      "Assuming fair basis is static"
     ],
     "prerequisites": [
-      "Chapter 13 pure-credit signal",
-      "Execution cost model"
+      "Chapter 13 pure-credit diagnostics",
+      "Tenor conversion conventions"
     ],
     "exports_to_next_chapter": [
       "net_edge_bp",
+      "carry_estimate_bp",
+      "rolldown_estimate_bp",
       "execution_confidence",
       "execute_flag"
     ],
     "core_claim": "Intra-currency tenor basis should be traded only when fair-value dislocation exceeds fully loaded implementation and funding frictions.",
     "technical_equations": [
-      {
-        "name": "Net tenor basis edge",
-        "equation": "basis_edge_bp=observed_basis_bp-fair_basis_bp-implementation_cost_bp"
-      },
-      {
-        "name": "Execution confidence",
-        "equation": "execution_confidence=min(1,max(0,basis_edge_bp/entry_hurdle_bp))"
-      }
+      "observed_basis_bp=(float_leg_a_pct-float_leg_b_pct)*100-reference_adjustment_bp",
+      "net_edge_bp=observed_basis_bp-fair_basis_bp-implementation_cost_bp",
+      "carry_estimate_bp=current_basis_bp*horizon_years+(expected_basis_bp-current_basis_bp)",
+      "rolldown_bp=basis(tenor-roll_horizon)-basis(tenor_now)"
     ],
     "step_by_step_derivation": [
-      "Construct fair basis from OIS discounting, projection curves, and collateral convention.",
-      "Compute observed-minus-fair dislocation and subtract cost stack (impact, funding, balance-sheet usage).",
-      "Convert residual edge into execution confidence and binary release flag via governance threshold."
+      "Compute observed same-currency basis from floating leg pair.",
+      "Estimate fair basis under harmonized assumptions.",
+      "Compare observed vs fair and subtract implementation costs.",
+      "Project carry and rolldown from tenor term structure.",
+      "Convert outputs into execution confidence and deploy/wait decision."
     ],
     "interactive_lab": {
       "inputs": [
@@ -835,8 +861,8 @@
       ]
     },
     "trade_interpretation": [
-      "Positive net edge with high confidence supports receiving expensive tenor leg / paying cheap leg package.",
-      "Near-threshold signals should remain watchlist ideas instead of immediate execution."
+      "Prioritize tenors with aligned edge and carry.",
+      "Reduce risk when rolldown is adverse despite positive spot edge."
     ],
     "failure_modes_model_risk": [
       {
@@ -860,21 +886,24 @@
         "execute_flag"
       ],
       "handoff": "Feeds cross-currency package allocator and expected-return budgeting."
-    }
+    },
+    "key_takeaway": "Tenor-basis execution quality depends on fair-value gap plus carry/rolldown, not observed quote alone."
   },
   "15": {
-    "title": "Chapter 15: Cross-currency basis swaps",
-    "learning_objective": "Translate cross-currency basis dislocations into expected carry-plus-convergence P&L for hedge-funded packages.",
-    "summary": "Builds forward return estimates from carry and rolldown, net of implementation costs and horizon assumptions.",
+    "title": "Chapter 15: Cross-currency basis swaps and CIP wedges",
+    "learning_objective": "Evaluate whether foreign assets remain attractive after full hedge and basis adjustments.",
+    "summary": "Cross-currency chapter linking CIP intuition to observed basis, FX hedge costs, and synthetic domestic exposure via foreign asset plus hedge.",
     "quotes": [
       "Carry is time income only if position survives path risk.",
       "Budgeting errors compound when horizons are misaligned."
     ],
     "market_objects": [
-      "notional",
-      "carry rate",
-      "rolldown rate",
-      "expected P&L"
+      "Domestic floating leg",
+      "Foreign floating leg",
+      "FX-forward implied funding",
+      "Cross-currency basis",
+      "FX hedge cost",
+      "Synthetic domestic hedged yield"
     ],
     "equations": [
       {
@@ -892,39 +921,33 @@
       "Subtract hedge/funding costs to obtain expected_total_pnl and decompose contribution shares."
     ],
     "failure_modes": [
-      {
-        "mode": "Horizon mismatch",
-        "mitigation": "Align carry accrual and convergence assumptions with actual holding-period mandate."
-      },
-      {
-        "mode": "Static basis reversion assumption",
-        "mitigation": "Use regime-conditioned convergence speeds and scenario envelopes."
-      }
+      "Assuming CIP holds at executable levels",
+      "Ignoring hedge-cost drag",
+      "Using one basis level across tenors"
     ],
     "prerequisites": [
-      "Chapter 14 executable flags",
-      "Return attribution basics"
+      "Chapter 14 tenor-basis execution confidence",
+      "FX forwards and collateral conventions"
     ],
     "exports_to_next_chapter": [
       "carry_pnl",
       "convergence_pnl",
-      "expected_total_pnl"
+      "expected_total_pnl",
+      "cross_currency_basis_bp",
+      "synthetic_domestic_hedged_yield_pct"
     ],
     "core_claim": "Cross-currency basis value is realized through carry plus convergence, net of hedge and funding frictions over a defined horizon.",
     "technical_equations": [
-      {
-        "name": "Carry P&L",
-        "equation": "carry_pnl=notional*(annualized_basis_carry_bp/10000)*horizon_years"
-      },
-      {
-        "name": "Expected total P&L",
-        "equation": "expected_total_pnl=carry_pnl+convergence_pnl-hedging_costs"
-      }
+      "basis_bp=(domestic_float-(foreign_float+fx_forward_implied))*100-adjustments_bp",
+      "synthetic_yield_pct=foreign_leg_yield_pct+fx_hedge_cost_pct+basis_bp/100",
+      "expected_total_pnl=notional*(basis_carry_bp+convergence_bp)*horizon/10000-hedging_costs"
     ],
     "step_by_step_derivation": [
-      "Convert quoted basis into annualized carry under collateral/funding convention.",
-      "Project convergence component from current basis gap and horizon mean-reversion assumption.",
-      "Subtract hedge/funding costs to obtain expected_total_pnl and decompose contribution shares."
+      "Start from CIP reference relationship using domestic/foreign/FX-forward rates.",
+      "Infer cross-currency basis and interpret funding imbalance.",
+      "Compute synthetic domestic hedged yield from foreign asset + hedge + basis.",
+      "Add convergence and execution costs for expected P&L.",
+      "Stress basis shocks for downside control."
     ],
     "interactive_lab": {
       "inputs": [
@@ -944,8 +967,8 @@
       ]
     },
     "trade_interpretation": [
-      "Prefer packages where expected_total_pnl remains positive under conservative funding scenarios.",
-      "Carry-heavy trades with weak convergence should be capped by path-risk limits."
+      "Allocate toward superior synthetic hedged yields, not raw foreign yields.",
+      "Size to basis-shock sensitivity and hedge-cost uncertainty."
     ],
     "failure_modes_model_risk": [
       {
@@ -969,7 +992,8 @@
         "expected_total_pnl"
       ],
       "handoff": "Inputs integrated hedge sizing for asset-basis-plus-CDS package."
-    }
+    },
+    "key_takeaway": "Cross-currency basis is the tradable cost of funding imbalance in hedged global allocation."
   },
   "16": {
     "title": "Chapter 16: Integrated asset-basis and CDS",
@@ -1184,18 +1208,20 @@
     }
   },
   "18": {
-    "title": "Chapter 18: Capital shadow costs",
-    "learning_objective": "Price capital usage and funding frictions into final trade acceptance decisions.",
-    "summary": "Final governance layer that nets expected alpha against capital and funding charges to determine approval readiness.",
+    "title": "Chapter 18: Other factors affecting swap spreads (executable realism)",
+    "learning_objective": "Explain why correct model value may still be non-tradeable and enforce a robust approval gate.",
+    "summary": "Capstone realism chapter: converts theoretical spread value into executable spread after leverage/capital usage, repo stress, liquidity wedge, and hard non-monetisable blockers.",
     "quotes": [
       "Positive gross alpha can still fail economic value tests.",
       "Capital is a scarce input, not a free buffer."
     ],
     "market_objects": [
-      "expected P&L",
-      "economic capital",
-      "hurdle rate",
-      "approval flag"
+      "Theoretical spread gap",
+      "Capital and leverage charge",
+      "Repo stress add-on",
+      "Liquidity wedge",
+      "Non-monetisable blocker gate",
+      "Executable residual"
     ],
     "equations": [
       {
@@ -1213,39 +1239,36 @@
       "Approve trade only if risk_adjusted_alpha remains positive and policy thresholds are met."
     ],
     "failure_modes": [
-      {
-        "mode": "Outdated hurdle assumptions",
-        "mitigation": "Synchronize with treasury transfer-pricing updates and policy calendar."
-      },
-      {
-        "mode": "Ignoring capital non-linearity at scale",
-        "mitigation": "Run marginal and incremental capital simulations by position size."
-      }
+      "Confusing theoretical and executable value",
+      "Ignoring capital/leverage scarcity",
+      "Treating governance blockers as soft constraints"
     ],
     "prerequisites": [
-      "Chapter 17 stress envelope",
-      "Internal capital policy"
+      "Chapter 17 allocation diagnostics",
+      "Desk governance and balance-sheet constraints"
     ],
     "exports_to_next_chapter": [
-      "capital_charge",
-      "risk_adjusted_alpha",
-      "approval_flag"
+      "structural_fair_spread_bp",
+      "observed_spread_bp",
+      "shadow_funding_cost_bp",
+      "capital_charge_bp",
+      "liquidity_wedge_bp",
+      "repo_stress_add_on_bp",
+      "adjusted_executable_spread_residual_bp",
+      "approval_gate"
     ],
     "core_claim": "Final trade approval requires expected alpha to clear capital and funding shadow costs, not just positive gross P&L.",
     "technical_equations": [
-      {
-        "name": "Capital shadow charge",
-        "equation": "capital_charge=capital_used*capital_hurdle"
-      },
-      {
-        "name": "Risk-adjusted alpha",
-        "equation": "risk_adjusted_alpha=expected_pnl-capital_charge-funding_charge"
-      }
+      "spread_gap_bp=observed_spread_bp-structural_fair_spread_bp",
+      "capital_charge_bp=(capital_used*capital_hurdle)/spread_bp_value_$perbp",
+      "adj_residual_bp=spread_gap_bp-shadow_funding_cost_bp-capital_charge_bp-liquidity_wedge_bp-repo_stress_add_on_bp",
+      "approve if adj_residual_bp>threshold_bp and no_non_monetisable_block"
     ],
     "step_by_step_derivation": [
-      "Import expected_pnl and stress diagnostics from prior chapters for candidate packages.",
-      "Compute capital and funding shadow costs under current transfer-pricing and balance-sheet policy.",
-      "Approve trade only if risk_adjusted_alpha remains positive and policy thresholds are met."
+      "Compute theoretical spread gap from model fair value vs observed level.",
+      "Convert monetisable frictions into additive spread wedges.",
+      "Form adjusted executable residual and compare to threshold.",
+      "Apply non-monetisable blocker override for governance realism."
     ],
     "interactive_lab": {
       "inputs": [
@@ -1265,8 +1288,8 @@
       ]
     },
     "trade_interpretation": [
-      "Positive risk_adjusted_alpha supports deployment; negative values imply capital is better allocated elsewhere.",
-      "Borderline approvals should include explicit remediation plan (size reduction or cheaper funding path)."
+      "Positive theoretical gap must survive wedge adjustments to be tradable.",
+      "Non-monetisable blockers can veto monetisably attractive setups."
     ],
     "failure_modes_model_risk": [
       {
@@ -1290,6 +1313,7 @@
         "approval_flag"
       ],
       "handoff": "Terminal governance output for portfolio allocation committee."
-    }
+    },
+    "key_takeaway": "Correct valuation is necessary but not sufficient; executable realism decides actual deployment."
   }
 }
