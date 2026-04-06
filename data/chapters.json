@@ -1,37 +1,42 @@
 {
   "1": {
-    "title": "Chapter 1: Cash-and-carry arbitrage",
-    "learning_objective": "Map mispricing into executable arbitrage direction.",
-    "summary": "Introduces fair-futures pricing, basis interpretation, and directional cash-and-carry decisions under funding assumptions.",
+    "title": "Chapter 1: Relative value and cash-and-carry",
+    "learning_objective": "Derive fair value via replication, measure residuals, and map arbitrage direction under explicit frictions.",
+    "summary": "Introduces law-of-one-price intuition, payoff replication, friction-adjusted fair value, basis/residual interpretation, and directional cash-and-carry decisions.",
     "quotes": [
       "Basis sign is a decision rule only after financing is modeled.",
       "Execution discipline turns theoretical edge into realizable P&L."
     ],
     "market_objects": [
       "spot bond",
-      "repo funding rate",
+      "repo funding stack",
       "futures contract",
+      "fair value residual",
       "basis"
     ],
     "equations": [
       {
-        "name": "Fair futures",
-        "equation": "F*=S*exp(r*T)"
+        "name": "Payoff equivalence",
+        "equation": "S_T-F_mkt=S_T-F*"
+      },
+      {
+        "name": "Fair value residual",
+        "equation": "epsilon=V_mkt-V_fair"
       },
       {
         "name": "Basis",
-        "equation": "basis=F_mkt-F*"
+        "equation": "b=F_mkt-F*"
       }
     ],
     "derivation_steps": [
-      "Start with spot financed in repo.",
-      "Project financing cost to futures maturity.",
-      "Compare observed vs fair futures to infer basis and trade direction."
+      "Replication: construct synthetic futures using spot plus financing and matched maturity payoff.",
+      "Fair price: solve no-arbitrage fair value after adding friction layers.",
+      "Residual: compute market minus fair value and map sign to direction and confidence."
     ],
     "failure_modes": [
       {
-        "mode": "Ignoring transaction and balance-sheet costs",
-        "mitigation": "Apply entry threshold net of all-in implementation costs."
+        "mode": "Treating frictions as zero",
+        "mitigation": "Apply transaction costs, repo stress, and balance-sheet costs before trading."
       }
     ],
     "prerequisites": [
@@ -40,9 +45,12 @@
       "Repo mechanics"
     ],
     "exports_to_next_chapter": [
-      "basis",
-      "arbitrage_direction",
-      "confidence"
+      "fair_value",
+      "market_value",
+      "residual",
+      "direction",
+      "confidence",
+      "friction_notes"
     ]
   },
   "2": {

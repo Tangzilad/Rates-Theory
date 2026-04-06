@@ -40,6 +40,17 @@ class FactorState(_TypedState):
     top_loadings: dict[str, list[float]]
 
 
+
+
+@dataclass(frozen=True)
+class MVOUState(_TypedState):
+    k_matrix: list[list[float]]
+    mu_vector: list[float]
+    covariance_matrix: list[list[float]]
+    expected_path: list[list[float]]
+    simulated_joint_paths: list[list[list[float]]]
+    hedge_suggestions: list[str]
+
 @dataclass(frozen=True)
 class JointSpreadState(_TypedState):
     fair_futures: float
@@ -48,6 +59,18 @@ class JointSpreadState(_TypedState):
     residual_series: TradeResidualSeries | None = None
     mean_reversion: MeanReversionState | None = None
     factors: FactorState | None = None
+
+
+
+
+@dataclass(frozen=True)
+class RelativeValueState(_TypedState):
+    fair_value: float
+    market_value: float
+    residual: float
+    direction: str
+    confidence: float
+    friction_notes: list[str]
 
 
 @dataclass(frozen=True)
@@ -66,6 +89,32 @@ class FundingBasisState(_TypedState):
     asset_swap_spread_bp: float
     tenor_basis_bp: float
     cross_currency_basis_bp: float
+
+
+@dataclass(frozen=True)
+class CurvePoint(_TypedState):
+    maturity_years: float
+    rate_pct: float
+
+
+@dataclass(frozen=True)
+class ResidualDiagnosticsState(_TypedState):
+    rmse_nss_bp: float
+    rmse_interp_bp: float
+    mean_abs_nss_bp: float
+    mean_abs_interp_bp: float
+    max_abs_nss_bp: float
+    max_abs_interp_bp: float
+
+
+@dataclass(frozen=True)
+class YieldCurveModelState(_TypedState):
+    par_curve: list[CurvePoint]
+    zero_curve: list[CurvePoint]
+    forward_curve: list[CurvePoint]
+    fit_params: dict[str, float]
+    interpolation_settings: dict[str, float | str]
+    residual_diagnostics: ResidualDiagnosticsState
 
 
 @dataclass(frozen=True)
