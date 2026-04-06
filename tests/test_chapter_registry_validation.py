@@ -1,4 +1,4 @@
-from chapters import (
+from src.chapters.registry import (
     CHAPTER_DEPENDENCIES,
     build_chapter_registry,
     validate_chapter_dependencies,
