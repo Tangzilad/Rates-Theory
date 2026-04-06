@@ -5,7 +5,8 @@ from typing import Any, Dict, List
 import streamlit as st
 
 from .common import SimpleChapter
-from .swap_basis import clamp_confidence, package_state
+from .swap_basis import package_state
+from src.models.integrated_rv import execution_signal
 
 
 class Chapter14(SimpleChapter):
@@ -30,13 +31,12 @@ class Chapter14(SimpleChapter):
         ]
 
     def interactive_lab(self) -> Dict[str, Any]:
+        st.caption("Pedagogical simplification: execution confidence is a clipped linear function of edge vs threshold.")
         signal_bp = st.number_input("Signal edge before costs (bp)", value=37.0, step=1.0, key="sig_14")
         transaction_cost_bp = st.number_input("Estimated transaction costs (bp)", value=11.0, step=1.0, key="tc_14")
         entry_threshold_bp = st.number_input("Minimum entry threshold (bp)", value=20.0, step=1.0, key="th_14")
 
-        edge_bp = signal_bp - transaction_cost_bp
-        confidence = clamp_confidence(edge_bp / max(entry_threshold_bp, 1.0))
-        execute_flag = edge_bp >= entry_threshold_bp
+        edge_bp, confidence, execute_flag = execution_signal(signal_bp, transaction_cost_bp, entry_threshold_bp)
 
         st.metric("Net edge (bp)", f"{edge_bp:.2f}")
         st.metric("Execution confidence", f"{confidence:.2f}")

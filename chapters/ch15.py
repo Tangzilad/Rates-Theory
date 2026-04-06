@@ -5,7 +5,8 @@ from typing import Any, Dict, List
 import streamlit as st
 
 from .common import SimpleChapter
-from .swap_basis import carry_pnl, package_state
+from .swap_basis import package_state
+from src.models.integrated_rv import expected_carry_pnl
 
 
 class Chapter15(SimpleChapter):
@@ -30,14 +31,15 @@ class Chapter15(SimpleChapter):
         ]
 
     def interactive_lab(self) -> Dict[str, Any]:
+        st.caption("Pedagogical simplification: carry and rolldown are projected with linear annualized bp-to-P&L scaling.")
         notional = st.number_input("Notional ($)", value=25_000_000.0, step=500_000.0, key="notional_15")
         carry_bp = st.number_input("Carry (bp/year)", value=42.0, step=1.0, key="carry_15")
         rolldown_bp = st.number_input("Rolldown (bp/year)", value=18.0, step=1.0, key="roll_15")
         horizon_years = st.slider("Holding horizon (years)", min_value=0.1, max_value=2.0, value=0.5, step=0.1, key="h_15")
         costs = st.number_input("Estimated implementation costs ($)", value=60_000.0, step=5_000.0, key="cost_15")
 
-        carry = carry_pnl(notional, carry_bp, horizon_years)
-        rolldown = carry_pnl(notional, rolldown_bp, horizon_years)
+        carry = expected_carry_pnl(notional, carry_bp, horizon_years)
+        rolldown = expected_carry_pnl(notional, rolldown_bp, horizon_years)
         total = carry + rolldown - costs
 
         st.metric("Carry P&L ($)", f"{carry:,.0f}")

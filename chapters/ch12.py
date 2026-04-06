@@ -6,6 +6,7 @@ import streamlit as st
 
 from .common import SimpleChapter
 from .swap_basis import package_state, spread_bp
+from src.models.asset_swaps import decompose_asset_swap
 
 
 class Chapter12(SimpleChapter):
@@ -30,14 +31,19 @@ class Chapter12(SimpleChapter):
         ]
 
     def interactive_lab(self) -> Dict[str, Any]:
+        st.caption("Pedagogical simplification: asset-swap package effects are treated as additive basis-point terms.")
         z_spread = st.number_input("Bond z-spread (bp)", value=92.0, step=1.0, key="z_12")
         bond_coupon = st.number_input("Bond coupon (%)", value=4.15, step=0.01, key="coupon_12")
         swap_rate = st.number_input("Par swap rate (%)", value=3.88, step=0.01, key="swap_12")
         repo_haircut_bp = st.number_input("Repo / funding drag (bp)", value=14.0, step=1.0, key="repo_12")
 
         coupon_mismatch_bp = spread_bp(bond_coupon, swap_rate)
-        asset_swap_spread_bp = z_spread - coupon_mismatch_bp
-        package_carry_bp = asset_swap_spread_bp - repo_haircut_bp
+        _, asset_swap_spread_bp, package_carry_bp = decompose_asset_swap(
+            z_spread_bp=z_spread,
+            bond_coupon_pct=bond_coupon,
+            swap_rate_pct=swap_rate,
+            repo_drag_bp=repo_haircut_bp,
+        )
 
         st.metric("Coupon mismatch (bp)", f"{coupon_mismatch_bp:.2f}")
         st.metric("Asset-swap spread (bp)", f"{asset_swap_spread_bp:.2f}")

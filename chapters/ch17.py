@@ -6,6 +6,7 @@ import streamlit as st
 
 from .common import SimpleChapter
 from .swap_basis import package_state
+from src.models.integrated_rv import stress_pnl
 
 
 class Chapter17(SimpleChapter):
@@ -30,14 +31,14 @@ class Chapter17(SimpleChapter):
         ]
 
     def interactive_lab(self) -> Dict[str, Any]:
+        st.caption("Pedagogical simplification: stress loss uses linear CS01/DV01 and an additive liquidity penalty.")
         spread_shock = st.number_input("Spread shock (bp)", value=75.0, step=5.0, key="ss_17")
         rate_shock = st.number_input("Rate shock (bp)", value=40.0, step=5.0, key="rs_17")
         cs01 = st.number_input("CS01 ($/bp)", value=82_000.0, step=2_000.0, key="cs01_17")
         dv01 = st.number_input("DV01 ($/bp)", value=31_000.0, step=1_000.0, key="dv01_17")
         liquidity_penalty = st.number_input("Liquidity liquidation penalty ($)", value=350_000.0, step=25_000.0, key="liq_17")
 
-        core_stress = -((spread_shock * cs01) + (rate_shock * dv01))
-        total_stress = core_stress - liquidity_penalty
+        core_stress, total_stress = stress_pnl(spread_shock, rate_shock, cs01, dv01, liquidity_penalty)
 
         st.metric("Core stress P&L ($)", f"{core_stress:,.0f}")
         st.metric("Total stressed P&L ($)", f"{total_stress:,.0f}")

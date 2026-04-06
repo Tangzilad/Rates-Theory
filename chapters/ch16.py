@@ -6,6 +6,7 @@ import streamlit as st
 
 from .common import SimpleChapter
 from .swap_basis import package_state
+from src.models.integrated_rv import hedge_ratio
 
 
 class Chapter16(SimpleChapter):
@@ -30,15 +31,14 @@ class Chapter16(SimpleChapter):
         ]
 
     def interactive_lab(self) -> Dict[str, Any]:
+        st.caption("Pedagogical simplification: hedge sizing assumes static DV01 and a one-instrument linear hedge.")
         trade_dv01 = st.number_input("Trade DV01 ($/bp)", value=145_000.0, step=5_000.0, key="tdv01_16")
         hedge_dv01 = st.number_input("Hedge instrument DV01 ($/bp per unit)", value=12_500.0, step=500.0, key="hdv01_16")
         target_residual = st.number_input("Target residual DV01 ($/bp)", value=20_000.0, step=2_500.0, key="res_16")
 
-        target_hedged_dv01 = max(trade_dv01 - target_residual, 0.0)
-        hedge_ratio = target_hedged_dv01 / max(hedge_dv01, 1.0)
-        realized_residual = trade_dv01 - hedge_ratio * hedge_dv01
+        hedge_ratio_units, realized_residual = hedge_ratio(trade_dv01, hedge_dv01, target_residual)
 
-        st.metric("Hedge ratio (units)", f"{hedge_ratio:.2f}")
+        st.metric("Hedge ratio (units)", f"{hedge_ratio_units:.2f}")
         st.metric("Realized residual DV01 ($/bp)", f"{realized_residual:,.0f}")
 
         return {
@@ -47,7 +47,7 @@ class Chapter16(SimpleChapter):
                 "hedge_dv01": hedge_dv01,
                 "target_residual_dv01": target_residual,
             },
-            "outputs": {"hedge_ratio_units": hedge_ratio, "realized_residual_dv01": realized_residual},
+            "outputs": {"hedge_ratio_units": hedge_ratio_units, "realized_residual_dv01": realized_residual},
         }
 
     def failure_modes(self) -> List[Dict[str, str]]:
