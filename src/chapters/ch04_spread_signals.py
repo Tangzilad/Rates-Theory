@@ -63,4 +63,4 @@ class Chapter04(ChapterBase):
         return [{"prompt": "What happens when residual volatility doubles?", "expected": "Absolute z-score and rank score fall for the same raw residual."}]
 
     def exports_to_next_chapter(self) -> dict[str, object]:
-        return {"signals": ["residual_bp", "z_score", "rank_score", "signal_direction", "eligible"], "usage": "Feeds Chapter 5 diagnostics and Chapter 6 portfolio construction."}
+        return {"signals": ["residual_bp", "z_score", "rank_score", "signal_direction", "eligible"], "usage": "Feeds Chapter 5 diagnostics and Chapter 6 yield-curve modeling."}
