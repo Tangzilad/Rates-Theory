@@ -37,6 +37,17 @@ CHAPTER_REQUIRED_FIELDS = [
     "exports_to_next_chapter",
 ]
 
+CHAPTER_ENRICHED_OPTIONAL_FIELDS = [
+    "core_claim",
+    "technical_equations",
+    "step_by_step_derivation",
+    "interactive_lab",
+    "trade_interpretation",
+    "failure_modes_model_risk",
+    "checkpoint_assessment",
+    "exports",
+]
+
 
 def parse_chapters_map(payload: Any) -> Dict[str, Dict[str, Any]]:
     """Validate and normalize the primary chapter content map (keys '1'..'18')."""
@@ -78,9 +89,37 @@ def parse_chapters_map(payload: Any) -> Dict[str, Dict[str, Any]]:
             "exports_to_next_chapter": _normalize_string_list(
                 chapter.get("exports_to_next_chapter"), "exports_to_next_chapter"
             ),
+            "core_claim": str(chapter.get("core_claim", "")).strip(),
+            "technical_equations": _normalize_object_list(
+                chapter.get("technical_equations"), "technical_equations"
+            ),
+            "step_by_step_derivation": _normalize_string_list(
+                chapter.get("step_by_step_derivation"), "step_by_step_derivation"
+            ),
+            "interactive_lab": _normalize_json_value(chapter.get("interactive_lab"), "interactive_lab"),
+            "trade_interpretation": _normalize_string_list(
+                chapter.get("trade_interpretation"), "trade_interpretation"
+            ),
+            "failure_modes_model_risk": _normalize_object_list(
+                chapter.get("failure_modes_model_risk"), "failure_modes_model_risk"
+            ),
+            "checkpoint_assessment": _normalize_json_value(
+                chapter.get("checkpoint_assessment"), "checkpoint_assessment"
+            ),
+            "exports": _normalize_json_value(chapter.get("exports"), "exports"),
         }
 
     return normalized
+
+
+def _normalize_json_value(raw: Any, field_name: str) -> Any:
+    if raw is None:
+        return {}
+    if isinstance(raw, (dict, list, str, int, float, bool)):
+        return raw
+    raise ChapterSummarySchemaError(
+        f"'{field_name}' must be a JSON-compatible value (object, list, scalar, or null)."
+    )
 
 
 def _normalize_object_list(raw: Any, field_name: str) -> List[Dict[str, Any]]:

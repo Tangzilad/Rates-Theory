@@ -82,6 +82,26 @@ def chapter_key_sorter(k: str) -> Tuple[int, str]:
     return 10_000, k
 
 
+def _resolve_contract_field(
+    chapter: Any,
+    chapter_data: Dict[str, Any],
+    method_name: str,
+    fallback_fields: list[str],
+    default: Any,
+) -> Any:
+    value = None
+    if hasattr(chapter, method_name):
+        candidate = getattr(chapter, method_name)
+        value = candidate() if callable(candidate) else candidate
+    if value not in (None, "", [], {}):
+        return value
+    for field in fallback_fields:
+        candidate = chapter_data.get(field)
+        if candidate not in (None, "", [], {}):
+            return candidate
+    return default
+
+
 def render_chapter_header(chapter_data: dict, chapter_meta: dict) -> None:
     st.header(chapter_meta.get("title", chapter_data.get("title", "Chapter")))
     st.write(chapter_data.get("summary", chapter_meta.get("objective", "No summary available.")))
@@ -119,7 +139,7 @@ CHAPTER_BOUNDARY_RULES: dict[str, dict[str, type]] = {
 }
 
 
-def render_chapter_contract(selected_key: str) -> None:
+def render_chapter_contract(selected_key: str, chapter_data: Dict[str, Any]) -> None:
     registry = build_chapter_registry()
     validation_result = validate_chapter_dependencies(registry)
     blocking_issues = validation_result.blocking_issues_for(selected_key)
@@ -133,14 +153,28 @@ def render_chapter_contract(selected_key: str) -> None:
 
     chapter = get_chapter(selected_key, registry, validation_result=validation_result)
 
-    core_claim = chapter.core_claim() if hasattr(chapter, "core_claim") else chapter.chapter_meta().get("objective", "")
-    market_objects = chapter.market_objects() if hasattr(chapter, "market_objects") else []
-    technical_equations = chapter.technical_equations() if hasattr(chapter, "technical_equations") else chapter.equation_set()
-    derivation = chapter.derivation() if hasattr(chapter, "derivation") else chapter.derivation_steps()
-    trade_interpretation = chapter.trade_interpretation() if hasattr(chapter, "trade_interpretation") else []
-    failure_modes = chapter.failure_modes_model_risk() if hasattr(chapter, "failure_modes_model_risk") else chapter.failure_modes()
-    checkpoint = chapter.checkpoint() if hasattr(chapter, "checkpoint") else chapter.assessment()
-    exports = chapter.exports_to_next_chapter()
+    core_claim = _resolve_contract_field(
+        chapter, chapter_data, "core_claim", ["core_claim", "learning_objective"], chapter.chapter_meta().get("objective", "")
+    )
+    market_objects = _resolve_contract_field(chapter, chapter_data, "market_objects", ["market_objects"], [])
+    technical_equations = _resolve_contract_field(
+        chapter, chapter_data, "technical_equations", ["technical_equations", "equations"], []
+    )
+    derivation = _resolve_contract_field(
+        chapter, chapter_data, "derivation", ["step_by_step_derivation", "derivation_steps"], []
+    )
+    trade_interpretation = _resolve_contract_field(
+        chapter, chapter_data, "trade_interpretation", ["trade_interpretation"], []
+    )
+    failure_modes = _resolve_contract_field(
+        chapter, chapter_data, "failure_modes_model_risk", ["failure_modes_model_risk", "failure_modes"], []
+    )
+    checkpoint = _resolve_contract_field(
+        chapter, chapter_data, "checkpoint", ["checkpoint_assessment"], {}
+    )
+    exports = _resolve_contract_field(
+        chapter, chapter_data, "exports_to_next_chapter", ["exports", "exports_to_next_chapter"], {}
+    )
 
     section_expander(
         "1) Core claim",
@@ -166,7 +200,7 @@ def render_chapter_contract(selected_key: str) -> None:
             st.caption("Run prerequisite chapter labs to populate validated upstream exports.")
             return
 
-        lab_payload = chapter.interactive_lab()
+        lab_payload = _resolve_contract_field(chapter, chapter_data, "interactive_lab", ["interactive_lab"], {})
         upstream_exports[selected_key] = lab_payload
         if "chapter_exports" not in st.session_state:
             st.session_state["chapter_exports"] = {}
@@ -214,7 +248,7 @@ registry = build_chapter_registry()
 validation_result = validate_chapter_dependencies(registry)
 chapter_meta = get_chapter(selected_key, registry, validation_result=validation_result).chapter_meta()
 render_chapter_header(chapter_data, chapter_meta)
-render_chapter_contract(selected_key)
+render_chapter_contract(selected_key, chapter_data)
 
 st.divider()
 st.caption("Contract-driven UI shell active: chapter content is loaded through the shared chapter interface.")
