@@ -296,6 +296,9 @@
       "Swap market conventions"
     ],
     "exports_to_next_chapter": [
+      "feasible_weight",
+      "expected_weighted_edge_bp",
+      "within_limits"
       "discount_factor",
       "forward_rate_pct",
       "basis_bp"
