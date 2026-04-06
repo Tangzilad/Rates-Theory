@@ -4,6 +4,9 @@ from typing import Any, Dict, List
 
 import streamlit as st
 
+from core.types import FundingBasisState
+from src.models.swap_spreads import asset_swap_spread, cross_currency_basis, intra_currency_basis
+
 from .common import SimpleChapter
 
 
@@ -14,7 +17,7 @@ class SwapBasisChapter(SimpleChapter):
             {"name": "XCCY basis", "equation": "basis=(usd_leg-eur_leg-fx_hedge)*100"},
         ]
 
-    def interactive_lab(self) -> Dict[str, Any]:
+    def interactive_lab(self) -> FundingBasisState:
         key = self.chapter_id
         c1, c2, c3 = st.columns(3)
         swap_rate = c1.number_input("Par swap rate (%)", value=4.15, step=0.01, key=f"swap_{key}")
@@ -28,31 +31,22 @@ class SwapBasisChapter(SimpleChapter):
         fx_hedge_cost = st.number_input("FX hedge cost (%)", value=0.95, step=0.01, key=f"fx_{key}")
 
         swap_spread = (swap_rate - gov_yield) * 100
-        asset_swap_spread = z_spread - (bond_coupon - swap_rate) * 100
-        tenor_basis = (tenor_long - tenor_short) * 100
-        xccy_basis = (usd_leg - eur_leg - fx_hedge_cost) * 100
+        asw_spread = asset_swap_spread(par_swap_rate=swap_rate, bond_yield=bond_coupon) * 100 + z_spread
+        tenor_basis = intra_currency_basis(float_leg_a=tenor_long, float_leg_b=tenor_short) * 100
+        xccy_basis = cross_currency_basis(
+            domestic_float_rate=usd_leg,
+            foreign_float_rate=eur_leg,
+            fx_forward_implied_rate=fx_hedge_cost,
+        ) * 100
 
         st.metric("Swap spread (bp)", f"{swap_spread:.2f}")
-        st.metric("Asset-swap spread (bp)", f"{asset_swap_spread:.2f}")
+        st.metric("Asset-swap spread (bp)", f"{asw_spread:.2f}")
         st.metric("Intra-currency basis (bp)", f"{tenor_basis:.2f}")
         st.metric("Cross-currency basis (bp)", f"{xccy_basis:.2f}")
 
-        return {
-            "inputs": {
-                "swap_rate": swap_rate,
-                "gov_yield": gov_yield,
-                "bond_coupon": bond_coupon,
-                "z_spread": z_spread,
-                "tenor_short": tenor_short,
-                "tenor_long": tenor_long,
-                "usd_leg": usd_leg,
-                "eur_leg": eur_leg,
-                "fx_hedge_cost": fx_hedge_cost,
-            },
-            "outputs": {
-                "swap_spread_bp": swap_spread,
-                "asset_swap_spread_bp": asset_swap_spread,
-                "tenor_basis_bp": tenor_basis,
-                "cross_currency_basis_bp": xccy_basis,
-            },
-        }
+        return FundingBasisState(
+            swap_spread_bp=swap_spread,
+            asset_swap_spread_bp=asw_spread,
+            tenor_basis_bp=tenor_basis,
+            cross_currency_basis_bp=xccy_basis,
+        )

@@ -7,6 +7,10 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
+from core.market_data import synthetic_tenor_matrix
+from core.types import ChapterExportState, FactorState
+from src.models.pca_module import run_pca
+
 from .base import ChapterBase
 
 
@@ -28,7 +32,7 @@ class Chapter03(ChapterBase):
     def derivation_steps(self) -> List[str]:
         return ["Standardize numeric columns.", "Compute covariance matrix.", "Sort eigenpairs descending by eigenvalue."]
 
-    def interactive_lab(self) -> Dict[str, Any]:
+    def interactive_lab(self) -> FactorState:
         source = st.radio("Data source", ["Synthetic sample", "Upload CSV"], horizontal=True)
         df = None
         if source == "Upload CSV":
@@ -37,22 +41,17 @@ class Chapter03(ChapterBase):
                 df = pd.read_csv(up)
 
         if df is None:
-            tenors = ["2Y", "5Y", "10Y", "30Y"]
-            cov = np.array([[1.0, 0.86, 0.70, 0.45], [0.86, 1.0, 0.82, 0.60], [0.70, 0.82, 1.0, 0.78], [0.45, 0.60, 0.78, 1.0]])
-            sample = np.random.default_rng(42).multivariate_normal(np.zeros(4), cov, size=350)
-            df = pd.DataFrame(sample, columns=tenors)
+            df = synthetic_tenor_matrix()
 
         x = df.select_dtypes(include=[np.number]).dropna()
         if x.shape[1] < 2:
             st.warning("Need at least 2 numeric columns for PCA.")
-            return {"inputs": {"n_columns": x.shape[1]}, "outputs": {"error": "Need at least 2 numeric columns"}}
+            return FactorState(columns=[], explained_variance=[], top_loadings={})
 
-        x_std = (x - x.mean()) / x.std(ddof=0)
-        cov = np.cov(x_std.T)
-        evals, evecs = np.linalg.eigh(cov)
-        idx = np.argsort(evals)[::-1]
-        evals, evecs = evals[idx], evecs[:, idx]
-        explained = evals / evals.sum()
+        pca_result = run_pca(x.to_numpy())
+        explained = pca_result.explained_variance_ratio
+        evecs = pca_result.eigenvectors
+        cols = list(x.columns)
 
         exp_df = pd.DataFrame({"PC": [f"PC{i + 1}" for i in range(len(explained))], "Explained Var": explained})
         st.dataframe(exp_df, use_container_width=True)
@@ -63,7 +62,6 @@ class Chapter03(ChapterBase):
         st.pyplot(fig1)
 
         fig2, ax2 = plt.subplots(figsize=(8, 4))
-        cols = list(x.columns)
         max_factors = min(3, evecs.shape[1])
         for i in range(max_factors):
             ax2.plot(cols, evecs[:, i], marker="o", label=f"PC{i + 1}")
@@ -72,13 +70,11 @@ class Chapter03(ChapterBase):
         ax2.legend()
         st.pyplot(fig2)
 
-        return {
-            "inputs": {"n_rows": int(x.shape[0]), "columns": cols},
-            "outputs": {
-                "explained_variance": explained.tolist(),
-                "top_loadings": {f"PC{i + 1}": evecs[:, i].tolist() for i in range(max_factors)},
-            },
-        }
+        return FactorState(
+            columns=cols,
+            explained_variance=explained.tolist(),
+            top_loadings={f"PC{i + 1}": evecs[:, i].tolist() for i in range(max_factors)},
+        )
 
     def case_studies(self) -> List[Dict[str, str]]:
         return [{"name": "Level/slope/curvature decomposition", "setup": "Daily curve changes", "takeaway": "First factors usually explain most variance."}]
@@ -89,5 +85,9 @@ class Chapter03(ChapterBase):
     def assessment(self) -> List[Dict[str, str]]:
         return [{"prompt": "Why standardize before PCA?", "expected": "To avoid scale-dominated factors."}]
 
-    def exports_to_next_chapter(self) -> Dict[str, Any]:
-        return {"signals": ["factor_scores", "explained_variance"], "usage": "Feed multi-asset spread construction and hedge design."}
+    def exports_to_next_chapter(self) -> ChapterExportState:
+        return ChapterExportState(
+            signals=["factor_scores", "explained_variance"],
+            usage="Feed multi-asset spread construction and hedge design.",
+            schema_name="FactorState",
+        )
