@@ -14,11 +14,13 @@ from . import (
     ou,
     pca,
     pca_module,
+    reference_rates,
     risk_diagnostics,
     risk_measures,
     shadow_costs,
     swap_spreads,
     yield_curve,
+    fitted_curves,
 )
 
 __all__ = [
@@ -35,9 +37,11 @@ __all__ = [
     "ou",
     "pca",
     "pca_module",
+    "reference_rates",
     "risk_diagnostics",
     "risk_measures",
     "shadow_costs",
     "swap_spreads",
     "yield_curve",
+    "fitted_curves",
 ]
