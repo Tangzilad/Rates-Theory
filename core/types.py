@@ -55,6 +55,16 @@ class MVOUState(_TypedState):
     hedge_suggestions: list[str]
 
 @dataclass(frozen=True)
+class RegimeState(_TypedState):
+    level_loading: float
+    slope_loading: float
+    curvature_loading: float
+    regime_score: float
+    regime_label: str
+    regime_confidence: float
+
+
+@dataclass(frozen=True)
 class JointSpreadState(_TypedState):
     fair_futures: float
     basis: float
@@ -91,6 +101,16 @@ class RiskMetricState(_TypedState):
     slope: float = 0.0
     fair_price_under_shock: float = 0.0
     approximation_error: float = 0.0
+
+
+@dataclass(frozen=True)
+class MultiCurveState(_TypedState):
+    ois_rate_pct: float
+    ibor_rate_pct: float
+    maturity_years: float
+    discount_factor: float
+    forward_rate_pct: float
+    basis_bp: float
 
 
 @dataclass(frozen=True)

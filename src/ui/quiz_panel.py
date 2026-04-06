@@ -22,4 +22,4 @@ def render_quiz_panel(assessment: List[Dict[str, str]]) -> None:
                 st.markdown(f"**Q{idx}. {prompt}**")
                 st.markdown(f"_Expected direction:_ {expected}")
 
-    section_expander("Assessment", expanded=False, icon="✅", body=_body)
+    section_expander("8) Checkpoint", expanded=False, icon="✅", body=_body)

@@ -17,9 +17,8 @@ from src.chapter_summary_schema import (
 )
 
 from src.chapters.registry import build_chapter_registry, get_chapter, validate_chapter_dependencies
-from src.ui.components import render_json_payload, section_expander
+from src.ui.components import render_json_payload, render_bulleted_lines, section_expander
 from src.ui.derivation_panel import render_derivation_panel
-from src.ui.diagnostics_panel import render_diagnostics_panel
 from src.ui.equation_cards import render_equation_cards
 from src.ui.quiz_panel import render_quiz_panel
 
@@ -133,15 +132,29 @@ def render_chapter_contract(selected_key: str) -> None:
 
     chapter = get_chapter(selected_key, registry, validation_result=validation_result)
 
-    render_diagnostics_panel(
-        prerequisites=chapter.prerequisites(),
-        concept_map=chapter.concept_map(),
-        case_studies=chapter.case_studies(),
-        failure_modes=chapter.failure_modes(),
-        exports=chapter.exports_to_next_chapter(),
+    core_claim = chapter.core_claim() if hasattr(chapter, "core_claim") else chapter.chapter_meta().get("objective", "")
+    market_objects = chapter.market_objects() if hasattr(chapter, "market_objects") else []
+    technical_equations = chapter.technical_equations() if hasattr(chapter, "technical_equations") else chapter.equation_set()
+    derivation = chapter.derivation() if hasattr(chapter, "derivation") else chapter.derivation_steps()
+    trade_interpretation = chapter.trade_interpretation() if hasattr(chapter, "trade_interpretation") else []
+    failure_modes = chapter.failure_modes_model_risk() if hasattr(chapter, "failure_modes_model_risk") else chapter.failure_modes()
+    checkpoint = chapter.checkpoint() if hasattr(chapter, "checkpoint") else chapter.assessment()
+    exports = chapter.exports_to_next_chapter()
+
+    section_expander(
+        "1) Core claim",
+        expanded=True,
+        icon="🎯",
+        body=lambda: st.write(core_claim),
     )
-    render_equation_cards(chapter.equation_set())
-    render_derivation_panel(chapter.derivation_steps())
+    section_expander(
+        "2) Market objects",
+        expanded=False,
+        icon="🏷️",
+        body=lambda: render_bulleted_lines(market_objects),
+    )
+    render_equation_cards(technical_equations)
+    render_derivation_panel(derivation)
 
     def _interactive_lab_body() -> None:
         errors = validate_boundary(selected_key, CHAPTER_BOUNDARY_RULES.get(selected_key, {}), upstream_exports)
@@ -157,8 +170,26 @@ def render_chapter_contract(selected_key: str) -> None:
         st.caption("Structured lab payload")
         render_json_payload(lab_payload)
 
-    section_expander("Interactive Lab", expanded=True, icon="🧪", body=_interactive_lab_body)
-    render_quiz_panel(chapter.assessment())
+    section_expander("5) Interactive lab", expanded=True, icon="🧪", body=_interactive_lab_body)
+    section_expander(
+        "6) Trade interpretation",
+        expanded=False,
+        icon="🧭",
+        body=lambda: render_bulleted_lines(trade_interpretation),
+    )
+    section_expander(
+        "7) Failure modes / model risk",
+        expanded=False,
+        icon="⚠️",
+        body=lambda: render_json_payload(failure_modes),
+    )
+    render_quiz_panel(checkpoint)
+    section_expander(
+        "9) Exports to next chapter",
+        expanded=False,
+        icon="📦",
+        body=lambda: render_json_payload(exports),
+    )
 
 
 st.title("Rates Theory Interactive Companion")

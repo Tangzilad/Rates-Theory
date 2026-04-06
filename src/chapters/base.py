@@ -57,6 +57,30 @@ class ChapterBase(ABC):
     def exports_to_next_chapter(self) -> Any:
         """Return explicit outputs that feed later chapters."""
 
+    # Canonical section-order API for Streamlit presentation.
+    def core_claim(self) -> str:
+        return self.chapter_meta().get("objective", "")
+
+    def market_objects(self) -> list[str]:
+        concept_map = self.concept_map()
+        return concept_map.get("nodes", []) if isinstance(concept_map, dict) else []
+
+    def technical_equations(self) -> list[dict[str, str]]:
+        return self.equation_set()
+
+    def derivation(self) -> list[str]:
+        return self.derivation_steps()
+
+    def trade_interpretation(self) -> list[str]:
+        case_studies = self.case_studies()
+        return [item.get("takeaway", "") for item in case_studies if isinstance(item, dict) and item.get("takeaway")]
+
+    def failure_modes_model_risk(self) -> list[dict[str, str]]:
+        return self.failure_modes()
+
+    def checkpoint(self) -> list[dict[str, str]]:
+        return self.assessment()
+
 
 class PlaceholderChapter(ChapterBase):
     """Explicitly non-implemented chapter that surfaces missing contracts."""

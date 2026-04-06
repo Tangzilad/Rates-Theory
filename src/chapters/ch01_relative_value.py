@@ -22,6 +22,12 @@ class Chapter01(ChapterBase):
     def prerequisites(self) -> list[str]:
         return ["Bond pricing basics", "Simple carry math", "Repo funding intuition"]
 
+    def core_claim(self) -> str:
+        return "Observed futures-vs-carry basis, net of financing, maps directly to directional cash-and-carry execution."
+
+    def market_objects(self) -> list[str]:
+        return ["spot bond", "repo funding rate", "futures contract", "basis"]
+
     def concept_map(self) -> dict[str, list[str]]:
         return {
             "nodes": [
@@ -40,14 +46,14 @@ class Chapter01(ChapterBase):
             ],
         }
 
-    def equation_set(self) -> list[dict[str, str]]:
+    def technical_equations(self) -> list[dict[str, str]]:
         return [
             {"name": "Payoff equivalence", "equation": "S_T - F_{mkt} = S_T - F^*"},
             {"name": "Fair value residual", "equation": "\\varepsilon = V_{mkt} - V_{fair}"},
             {"name": "Basis", "equation": "b = F_{mkt} - F^*"},
         ]
 
-    def derivation_steps(self) -> list[str]:
+    def derivation(self) -> list[str]:
         return [
             "Replication: build synthetic futures from spot plus financing and enforce payoff equivalence.",
             "Fair price: solve for the no-arbitrage fair value implied by replication and frictions.",
@@ -151,6 +157,12 @@ class Chapter01(ChapterBase):
             friction_notes=friction_notes,
         )
 
+    def trade_interpretation(self) -> list[str]:
+        return [
+            "Positive basis indicates futures rich versus financed spot: buy spot bond and short futures.",
+            "Negative basis indicates reverse cash-and-carry under borrow/shorting feasibility.",
+        ]
+
     def case_studies(self) -> list[dict[str, str]]:
         return [
             {
@@ -189,3 +201,16 @@ class Chapter01(ChapterBase):
             usage="Used as residual state input for mean-reversion modeling.",
             schema_name="RelativeValueState",
         )
+
+    # Backward-compatible method aliases for existing shell components.
+    def equation_set(self) -> list[dict[str, str]]:
+        return self.technical_equations()
+
+    def derivation_steps(self) -> list[str]:
+        return self.derivation()
+
+    def failure_modes(self) -> list[dict[str, str]]:
+        return self.failure_modes_model_risk()
+
+    def assessment(self) -> list[dict[str, str]]:
+        return self.checkpoint()

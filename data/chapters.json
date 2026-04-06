@@ -54,29 +54,33 @@
     ]
   },
   "2": {
-    "title": "Chapter 2: OU mean reversion",
+    "title": "Chapter 2: Mean reversion with Ornstein-Uhlenbeck dynamics",
     "learning_objective": "Quantify spread reversion and first-passage risk.",
-    "summary": "Frames spread dynamics with an Ornstein-Uhlenbeck process and links simulation outputs to hit probabilities and half-life metrics.",
+    "summary": "Models spread evolution as an OU process so half-life, barrier-hit probability, and terminal risk-adjusted payoff can be estimated for holding-period decisions.",
     "quotes": [
       "Half-life is useful only relative to your holding horizon.",
       "First-passage risk is a path property, not a terminal-value property."
     ],
     "market_objects": [
       "spread state variable",
-      "reversion speed",
-      "barrier",
-      "simulation paths"
+      "mean-reversion speed (theta)",
+      "barrier level",
+      "simulation path ensemble"
     ],
     "equations": [
       {
-        "name": "OU SDE",
+        "name": "OU spread dynamics",
         "equation": "dX_t=theta(mu-X_t)dt+sigma dW_t"
+      },
+      {
+        "name": "Half-life",
+        "equation": "t_1/2=ln(2)/theta"
       }
     ],
     "derivation_steps": [
-      "Discretize OU dynamics with Euler-Maruyama.",
-      "Simulate paths under calibrated parameters.",
-      "Compute barrier-hit probability and expected hit time."
+      "Calibrate OU parameters from spread history.",
+      "Simulate discrete paths and evaluate first-passage to target barrier.",
+      "Aggregate hit probability, mean first-passage time, and terminal Sharpe diagnostics."
     ],
     "failure_modes": [
       {
@@ -96,7 +100,7 @@
     ]
   },
   "3": {
-    "title": "Chapter 3: PCA factor extraction",
+    "title": "Chapter 3: PCA factor extraction for the rates curve",
     "learning_objective": "Extract orthogonal curve factors for diagnostics.",
     "summary": "Uses covariance-eigen decomposition to produce factor scores through time, reconstruction controls, residualized series, and candidate factor-neutral hedge weights.",
     "quotes": [
@@ -104,12 +108,16 @@
       "Stable factors require stable data engineering."
     ],
     "market_objects": [
-      "tenor return matrix",
+      "tenor return panel",
       "covariance matrix",
-      "eigenvectors",
-      "factor scores"
+      "principal-component loadings",
+      "factor variance shares"
     ],
     "equations": [
+      {
+        "name": "Covariance eigendecomposition",
+        "equation": "Sigma=V*Lambda*V^T"
+      },
       {
         "name": "Explained variance ratio",
         "equation": "EV_i=lambda_i/sum(lambda)"
@@ -157,27 +165,31 @@
   "4": {
     "title": "Chapter 4: Factor interpretation and regime mapping",
     "learning_objective": "Translate statistical factors into market narratives and regime tags.",
-    "summary": "Bridges raw factor outputs into interpretable rate regimes used for signal gating and context-aware decisions.",
+    "summary": "Maps statistical PCA factors into economic regime labels, producing a composite regime score and confidence used to gate relative-value signal aggressiveness.",
     "quotes": [
       "A factor is useful only when you can name its risk.",
       "Interpretability is a risk-control requirement, not a reporting feature."
     ],
     "market_objects": [
       "factor loadings",
-      "regime labels",
-      "macro anchors",
-      "signal gates"
+      "regime threshold bands",
+      "regime label",
+      "signal gate"
     ],
     "equations": [
       {
-        "name": "Regime score",
-        "equation": "regime_score=w^T factor_scores"
+        "name": "Composite regime score",
+        "equation": "regime_score=w_level*L+w_slope*S+w_curv*C"
+      },
+      {
+        "name": "Regime confidence",
+        "equation": "confidence=min(|regime_score|/threshold,1)"
       }
     ],
     "derivation_steps": [
-      "Assign economic labels to dominant factors.",
-      "Define regime thresholds on factor composites.",
-      "Validate labels against realized market episodes."
+      "Name major factors economically (level/slope/curvature).",
+      "Combine standardized factors into a weighted regime score.",
+      "Map score bands to labels and convert distance-from-threshold into confidence."
     ],
     "failure_modes": [
       {
@@ -190,34 +202,39 @@
       "Macro-rate intuition"
     ],
     "exports_to_next_chapter": [
+      "regime_score",
       "regime_label",
       "regime_confidence"
     ]
   },
   "5": {
-    "title": "Chapter 5: Duration and convexity diagnostics",
+    "title": "Chapter 5: Duration-convexity fair-value diagnostics",
     "learning_objective": "Translate curve shocks into price response.",
-    "summary": "Applies first- and second-order fixed-income sensitivities to estimate shock-adjusted fair value and slope context.",
+    "summary": "Uses duration and convexity approximations to translate yield-curve shocks into bond price responses and shock-adjusted fair-value estimates.",
     "quotes": [
       "Duration is linear memory; convexity is nonlinear correction.",
       "Approximation error grows faster than most traders expect."
     ],
     "market_objects": [
-      "2s10s slope",
-      "duration",
+      "2s10s curve slope",
+      "modified duration",
       "convexity",
-      "shock-adjusted price"
+      "shock-adjusted fair price"
     ],
     "equations": [
       {
-        "name": "Price approximation",
+        "name": "Duration-convexity approximation",
         "equation": "dP/P\u2248-D*dy+0.5*C*dy^2"
+      },
+      {
+        "name": "2s10s slope",
+        "equation": "slope_bp=(y10-y2)*100"
       }
     ],
     "derivation_steps": [
-      "Set rate shock in basis points.",
-      "Convert shock to decimal yield change.",
-      "Apply duration-convexity approximation to fair value."
+      "Select scenario shock dy in basis points and convert to decimal yield change.",
+      "Apply first- and second-order terms to estimate percent price move.",
+      "Convert estimated move into shock-adjusted fair price and slope diagnostic."
     ],
     "failure_modes": [
       {
@@ -236,9 +253,9 @@
     ]
   },
   "6": {
-    "title": "Chapter 6: Multi-curve construction",
+    "title": "Chapter 6: Multi-curve construction and basis diagnostics",
     "learning_objective": "Build consistent discount and projection curves for valuation.",
-    "summary": "Introduces collateral-aware discounting and tenor-specific projection curves to avoid valuation inconsistencies.",
+    "summary": "Builds collateral-consistent discount factors and tenor projection forwards, then measures IBOR-OIS basis to ensure valuation consistency across instruments.",
     "quotes": [
       "Curve choice is a model decision with P&L consequences.",
       "No-arbitrage requires curve consistency across instruments."
@@ -246,19 +263,27 @@
     "market_objects": [
       "OIS discount curve",
       "IBOR projection curve",
-      "bootstrapped pillars",
-      "forward rates"
+      "discount factor term structure",
+      "IBOR-OIS basis"
     ],
     "equations": [
       {
+        "name": "OIS discount factor",
+        "equation": "P(0,T)=exp(-r_ois*T)"
+      },
+      {
         "name": "Forward from discount factors",
         "equation": "f(t1,t2)=(P(t1)/P(t2)-1)/(t2-t1)"
+      },
+      {
+        "name": "IBOR-OIS basis",
+        "equation": "basis_bp=(r_ibor-r_ois)*10000"
       }
     ],
     "derivation_steps": [
-      "Bootstrap discount factors from liquid instruments.",
-      "Construct projection curve on matching accrual conventions.",
-      "Validate cross-instrument pricing residuals."
+      "Bootstrap OIS discount factors from liquid collateralized instruments.",
+      "Construct tenor-specific projection rates from matching accrual conventions.",
+      "Compare projection and discount curves to compute basis and residual consistency checks."
     ],
     "failure_modes": [
       {
@@ -271,8 +296,9 @@
       "Swap market conventions"
     ],
     "exports_to_next_chapter": [
-      "discount_factors",
-      "forward_curve"
+      "discount_factor",
+      "forward_rate_pct",
+      "basis_bp"
     ]
   },
   "7": {

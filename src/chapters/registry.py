@@ -31,7 +31,7 @@ CHAPTER_DEPENDENCIES: dict[str, dict[str, list[str]]] = {
     "2": {"1": ["residual", "direction", "confidence"]},
     "3": {"2": ["hit_probability"]},
     "4": {"3": ["explained_variance"]},
-    "5": {"4": ["z_score"]},
+    "5": {"4": ["regime_score", "regime_label"]},
     "6": {"5": ["fair_price", "curve_slope_bp"]},
     "7": {"6": ["zero_curve", "residual_diagnostics"]},
     "8": {"7": ["approved"]},

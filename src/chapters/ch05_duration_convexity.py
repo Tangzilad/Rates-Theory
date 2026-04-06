@@ -18,15 +18,21 @@ class Chapter05(ChapterBase):
         return {"chapter": self.chapter_id, "title": "Chapter 5: Duration and convexity diagnostics", "objective": "Translate curve shocks into price response."}
 
     def prerequisites(self) -> list[str]:
-        return ["Yield curve points", "Duration and convexity definitions"]
+        return ["Chapter 4 regime outputs", "Yield curve points", "Duration and convexity definitions"]
+
+    def core_claim(self) -> str:
+        return "Duration-convexity shock math converts curve views into first-pass fair-value diagnostics for RV entry discipline."
+
+    def market_objects(self) -> list[str]:
+        return ["2s10s slope", "modified duration", "convexity", "shock-adjusted fair price"]
 
     def concept_map(self) -> dict[str, list[str]]:
         return {"nodes": ["Curve slope", "Duration", "Convexity", "Shock", "Fair price"], "edges": ["Shock+Greeks->Price change", "Price change->Fair price"]}
 
-    def equation_set(self) -> list[dict[str, str]]:
+    def technical_equations(self) -> list[dict[str, str]]:
         return [{"name": "Price approximation", "equation": "dP/P≈-D*dy+0.5*C*dy^2"}]
 
-    def derivation_steps(self) -> list[str]:
+    def derivation(self) -> list[str]:
         return ["Choose dy shock in bp.", "Convert bp to decimal.", "Apply duration-convexity approximation."]
 
     def _cashflow_inputs(self) -> tuple[np.ndarray, np.ndarray, float, int]:
@@ -159,13 +165,19 @@ class Chapter05(ChapterBase):
             approximation_error=approximation_error,
         )
 
+    def trade_interpretation(self) -> list[str]:
+        return [
+            "If market price exceeds shock-adjusted fair value, RV stance leans rich/short subject to carry checks.",
+            "Large convexity cushions downside for long-duration longs in volatile rally scenarios.",
+        ]
+
     def case_studies(self) -> list[dict[str, str]]:
         return [{"name": "Bull steepener", "setup": "Front-end rallies more than long-end", "takeaway": "Curve slope and duration profile jointly drive PnL."}]
 
-    def failure_modes(self) -> list[dict[str, str]]:
+    def failure_modes_model_risk(self) -> list[dict[str, str]]:
         return [{"mode": "Large shock nonlinearity", "mitigation": "Reprice full cashflows beyond local approximation."}]
 
-    def assessment(self) -> list[dict[str, str]]:
+    def checkpoint(self) -> list[dict[str, str]]:
         return [{"prompt": "What term dampens duration losses in big moves?", "expected": "Positive convexity term."}]
 
     def exports_to_next_chapter(self) -> ChapterExportState:
