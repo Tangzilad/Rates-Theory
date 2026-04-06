@@ -298,261 +298,353 @@
     "exports_to_next_chapter": [
       "feasible_weight",
       "expected_weighted_edge_bp",
-      "within_limits"
+      "within_limits",
       "discount_factor",
       "forward_rate_pct",
       "basis_bp"
     ]
   },
   "7": {
-    "title": "Chapter 7: Spread normalization",
-    "learning_objective": "Normalize spreads for comparability across instruments and horizons.",
-    "summary": "Covers spread scaling, z-score style normalization, and liquidity adjustment so signals are cross-sectionally comparable.",
+    "title": "Chapter 7: Bond Futures Contracts",
+    "learning_objective": "Price and hedge deliverable bond futures under CTD optionality and repo-driven carry.",
+    "summary": "Introduces futures invoice mechanics, conversion factors, cheapest-to-deliver (CTD) selection, implied repo, and hedge-ratio construction linking cash bonds to listed futures.",
     "quotes": [
-      "Unnormalized spreads are often incomparable noise.",
-      "Comparability is the prerequisite for ranking."
+      "CTD switches are option events, not bookkeeping noise.",
+      "A futures hedge is only as good as its delivery assumptions."
     ],
     "market_objects": [
-      "raw spread",
-      "liquidity premium",
-      "normalized z-score",
-      "ranking bucket"
+      "Treasury bond futures",
+      "delivery basket",
+      "conversion factor",
+      "invoice price",
+      "cheapest-to-deliver bond",
+      "implied repo rate"
     ],
     "equations": [
       {
-        "name": "Spread z-score",
-        "equation": "z=(spread-mu)/sigma"
+        "name": "Invoice price",
+        "equation": "invoice=F*CF+AI_delivery"
+      },
+      {
+        "name": "Gross basis",
+        "equation": "gross_basis=dirty_price-invoice"
+      },
+      {
+        "name": "Implied repo",
+        "equation": "irr=((invoice+coupon_carry-purchase_price)/purchase_price)*(360/days_to_delivery)"
       }
     ],
     "derivation_steps": [
-      "Estimate local mean and volatility.",
-      "Adjust for liquidity and technical premiums.",
-      "Convert adjusted spread into normalized score."
+      "Compute invoice value for each deliverable bond using futures price, conversion factor, and projected accrued interest at delivery.",
+      "Carry each candidate through delivery date with repo financing and coupons to estimate implied repo and net basis.",
+      "Select CTD as the bond with strongest delivery economics and derive DV01-neutral hedge ratio against the cash position."
     ],
     "failure_modes": [
       {
-        "mode": "Volatility window mismatch",
-        "mitigation": "Align lookback horizon with strategy holding period."
+        "mode": "Ignoring CTD switch risk near delivery",
+        "mitigation": "Run scenario analysis across yield-curve shocks and monitor delivery-option boundary daily."
+      },
+      {
+        "mode": "Using stale repo assumptions",
+        "mitigation": "Refresh specialness and term repo curves intraday for stressed collateral."
       }
     ],
     "prerequisites": [
-      "Time-series statistics",
-      "Liquidity diagnostics"
+      "Chapter 6 discount factors and forward rates",
+      "Duration and convexity hedge intuition",
+      "Treasury futures market conventions"
     ],
     "exports_to_next_chapter": [
-      "normalized_spread_score",
-      "liquidity_adjusted_spread"
+      "ctd_identifier",
+      "conversion_factor",
+      "implied_repo_bp",
+      "futures_hedge_ratio",
+      "delivery_option_sensitivity"
     ]
   },
   "8": {
-    "title": "Chapter 8: Relative-value screens",
-    "learning_objective": "Combine model and market spread views into actionable flags.",
-    "summary": "Builds screening logic that blends valuation residuals, factor context, and execution filters to prioritize opportunities.",
+    "title": "Chapter 8: Fitted Bond Curves",
+    "learning_objective": "Fit arbitrage-aware government bond curves and extract robust rich/cheap diagnostics.",
+    "summary": "Builds parametric and spline-based zero curves from benchmark bonds, then translates residuals into standardized rich/cheap measures conditioned on liquidity and benchmark effects.",
     "quotes": [
-      "A screen ranks ideas; it does not approve trades.",
-      "Edge decays fastest where crowding is highest."
+      "A curve fit is a model of market microstructure as much as term structure.",
+      "Residuals without diagnostics are just interpolation errors."
     ],
     "market_objects": [
-      "screen score",
-      "relative-value bucket",
-      "entry threshold",
-      "signal flag"
+      "on-the-run Treasury bonds",
+      "off-the-run Treasury bonds",
+      "zero-coupon discount curve",
+      "fitted yield curve",
+      "pricing residual z-score"
     ],
     "equations": [
       {
-        "name": "RV score",
-        "equation": "rv_score=w1*valuation_gap+w2*factor_tailwind-w3*cost"
+        "name": "NSS zero yield",
+        "equation": "y(t)=beta0+beta1*((1-exp(-t/tau1))/(t/tau1))+beta2*(((1-exp(-t/tau1))/(t/tau1))-exp(-t/tau1))+beta3*(((1-exp(-t/tau2))/(t/tau2))-exp(-t/tau2))"
+      },
+      {
+        "name": "Discount factor from fitted yield",
+        "equation": "P(0,t)=exp(-y(t)*t)"
+      },
+      {
+        "name": "Residual z-score",
+        "equation": "z_i=(price_i-model_price_i)/sigma_resid"
       }
     ],
     "derivation_steps": [
-      "Assemble candidate instruments.",
-      "Compute multi-signal relative-value score.",
-      "Apply threshold and governance filters."
+      "Calibrate curve parameters to minimize weighted pricing errors across liquid benchmark bonds.",
+      "Convert fitted zero yields into discount factors and reprice each bond for residual diagnostics.",
+      "Standardize residuals by maturity-bucket uncertainty and rank rich/cheap candidates for follow-on analytics."
     ],
     "failure_modes": [
       {
-        "mode": "Ignoring implementation constraints",
-        "mitigation": "Embed liquidity, borrow, and balance-sheet filters in screen stage."
+        "mode": "Overfitting sparse maturities",
+        "mitigation": "Apply smoothness penalties and out-of-sample residual validation by tenor bucket."
+      },
+      {
+        "mode": "Mixing illiquid prints with benchmark prices",
+        "mitigation": "Use liquidity-weighted objective functions and stale-quote filtering."
       }
     ],
     "prerequisites": [
-      "Valuation residuals",
-      "Factor context",
-      "Cost estimates"
+      "Chapter 7 deliverable-bond and hedge context",
+      "Bootstrapping and discount-factor construction",
+      "Parametric curve estimation basics"
     ],
     "exports_to_next_chapter": [
-      "signals",
-      "screen_rank"
+      "fitted_zero_curve",
+      "discount_factor_grid",
+      "rich_cheap_zscores",
+      "tenor_residual_map",
+      "curve_fit_diagnostics"
     ]
   },
   "9": {
-    "title": "Chapter 9: Trade construction",
-    "learning_objective": "Convert valuation signals into position sizing and implementation checks.",
-    "summary": "Transforms screened ideas into parameterized trade structures with sizing, hedge placeholders, and execution readiness.",
+    "title": "Chapter 9: An Analytic Process for Government Bond Markets",
+    "learning_objective": "Assemble a repeatable top-down and cross-sectional workflow for government bond RV decisions.",
+    "summary": "Defines a full analytic pipeline from macro regime framing to curve-relative valuation, relative-value trade candidate selection, and governance gates for government bond markets.",
     "quotes": [
-      "Structure quality often dominates entry timing.",
-      "Sizing is the first line of defense against model error."
+      "Process quality compounds faster than isolated trade ideas.",
+      "Government RV requires linking macro narrative to instrument-level math."
     ],
     "market_objects": [
-      "position size",
-      "trade legs",
-      "risk budget",
-      "execution plan"
+      "macro regime state",
+      "term-premium estimate",
+      "benchmark spread box",
+      "butterfly structure",
+      "relative-value scorecard"
     ],
     "equations": [
       {
-        "name": "Risk-budget sizing",
-        "equation": "size=risk_budget/unit_risk"
+        "name": "Carry-and-roll expectation",
+        "equation": "E[ret]=carry+rolldown-0.5*duration*E[delta_y]"
+      },
+      {
+        "name": "Cross-maturity residual",
+        "equation": "rv_resid_i=y_i-y_fit(t_i)"
+      },
+      {
+        "name": "Signal aggregation",
+        "equation": "score=w_macro*s_macro+w_curve*s_curve+w_micro*s_micro"
       }
     ],
     "derivation_steps": [
-      "Map signal strength into target risk budget.",
-      "Select instrument legs and hedge proxies.",
-      "Run pre-trade implementation checklist."
+      "Classify macro regime and policy-path priors to set directional and volatility context.",
+      "Map fitted-curve residuals and carry/rolldown metrics into tenor and structure-level relative-value signals.",
+      "Aggregate standardized signals into a governed scorecard with explicit entry, sizing, and monitoring criteria."
     ],
     "failure_modes": [
       {
-        "mode": "Sizing off stale risk estimates",
-        "mitigation": "Refresh sensitivities before order release."
+        "mode": "Regime misclassification",
+        "mitigation": "Use probabilistic regime weights and scenario-robust signal aggregation."
+      },
+      {
+        "mode": "Signal collinearity double counting",
+        "mitigation": "Orthogonalize factor blocks before final composite scoring."
       }
     ],
     "prerequisites": [
-      "Signal ranking",
-      "Risk budgeting basics"
+      "Chapter 8 rich/cheap diagnostics",
+      "Macro policy and term-structure interpretation",
+      "Carry and roll-down mechanics"
     ],
     "exports_to_next_chapter": [
-      "position_blueprint",
-      "sizing_recommendation"
+      "macro_regime_label",
+      "rv_scorecard",
+      "tenor_signal_weights",
+      "candidate_trade_structures",
+      "governance_gate_results"
     ]
   },
   "10": {
-    "title": "Chapter 10: Execution microstructure",
-    "learning_objective": "Account for microstructure frictions in realized spread capture.",
-    "summary": "Examines slippage, queue dynamics, and venue effects so expected edge is adjusted to realistic realized outcomes.",
+    "title": "Chapter 10: Overview of Mutual Influences in Rates Markets",
+    "learning_objective": "Map swap-block dependencies and feedback loops across sovereign, swap, funding, and credit-linked rates markets.",
+    "summary": "Builds a dependency map showing how government curves, swap spreads, basis, collateral funding, and credit premia co-move, and identifies channels through which shocks propagate.",
     "quotes": [
-      "Gross edge is hypothetical until microstructure is paid.",
-      "Execution alpha is often process alpha."
+      "Swap blocks are coupled systems, not isolated valuation modules.",
+      "Dependency maps turn correlation anecdotes into causal hypotheses."
     ],
     "market_objects": [
-      "bid-ask spread",
-      "market impact",
-      "fill probability",
-      "venue selection"
+      "government yield curve",
+      "swap spread curve",
+      "OIS-LIBOR/SOFR basis block",
+      "repo specialness node",
+      "credit-funding channel"
     ],
     "equations": [
       {
-        "name": "Net edge",
-        "equation": "net_edge=gross_edge-expected_slippage-impact"
+        "name": "Swap spread identity",
+        "equation": "swap_spread_t=swap_rate_t-government_yield_t"
+      },
+      {
+        "name": "Linear dependency map",
+        "equation": "delta_x=A*delta_f+epsilon"
+      },
+      {
+        "name": "Shock propagation",
+        "equation": "delta_x_h=(I+A+...+A^h)*shock_0"
       }
     ],
     "derivation_steps": [
-      "Estimate baseline bid-ask and impact costs.",
-      "Model fill probability by urgency and venue.",
-      "Update expected net edge before execution."
+      "Define state vector of key rates blocks (government, swap, basis, funding, credit) and estimate dependency matrix.",
+      "Impose sign/economic constraints to separate structural influences from coincident noise.",
+      "Run shock-propagation scenarios to quantify first- and second-round impacts on valuation and hedge blocks."
     ],
     "failure_modes": [
       {
-        "mode": "Static slippage assumptions",
-        "mitigation": "Condition cost model on volatility and liquidity regime."
+        "mode": "Treating contemporaneous correlation as causality",
+        "mitigation": "Use lagged identification checks and economic sign restrictions."
+      },
+      {
+        "mode": "Ignoring nonlinear stress feedbacks",
+        "mitigation": "Augment linear map with regime-specific overrides for funding stress episodes."
       }
     ],
     "prerequisites": [
-      "Chapter 9 trade blueprint",
-      "Market microstructure basics"
+      "Chapter 9 analytics process outputs",
+      "Swap spread and basis definitions",
+      "Matrix-based factor modeling"
     ],
     "exports_to_next_chapter": [
-      "execution_cost_model",
-      "expected_fill_quality"
+      "swap_block_dependency_map",
+      "shock_transmission_matrix",
+      "dominant_influence_channels",
+      "hedge_contagion_flags",
+      "regime_specific_linkages"
     ]
   },
   "11": {
-    "title": "Chapter 11: Reference-rate transition",
-    "learning_objective": "Measure fallback economics moving from LIBOR-style fixings into RFR compounding.",
-    "summary": "Quantifies fallback spread and all-in coupon effects under benchmark migration from legacy term rates to compounded RFRs.",
+    "title": "Chapter 11: Reference Rates",
+    "learning_objective": "Compare and operationalize overnight and term reference rates for pricing, accrual, and risk transfer.",
+    "summary": "Covers construction and usage of SOFR, €STR, SONIA, and term benchmarks; links compounding conventions to coupon cashflows, discounting, and basis risk.",
     "quotes": [
-      "Fallback math is contract math before it is market math.",
-      "Day-count mismatches can dominate small spread edges."
+      "Reference rate choice is an exposure choice.",
+      "Compounding conventions are valuation parameters, not clerical detail."
     ],
     "market_objects": [
-      "legacy fixing",
-      "compounded RFR",
-      "fallback spread",
-      "all-in coupon"
+      "SOFR overnight fixings",
+      "term SOFR setting",
+      "compounded-in-arrears index",
+      "fallback spread adjustment",
+      "basis swap quote"
     ],
     "equations": [
       {
-        "name": "Fallback spread",
-        "equation": "fallback_bp=(legacy_fixing-rfr_compounded)*100"
+        "name": "Compounded overnight rate",
+        "equation": "R_comp=(prod_i(1+r_i*delta_i)-1)/sum_i(delta_i)"
       },
       {
-        "name": "All-in coupon",
-        "equation": "all_in_pct=rfr_compounded+fallback_adj/100"
+        "name": "All-in fallback coupon",
+        "equation": "coupon_all_in=R_comp+spread_fallback"
+      },
+      {
+        "name": "Reference-rate basis",
+        "equation": "basis_ref=R_term-R_comp"
       }
     ],
     "derivation_steps": [
-      "Collect matched legacy and RFR observations.",
-      "Convert difference into fallback basis points.",
-      "Apply contractual adjustment to estimate all-in coupon."
+      "Build compounded-in-arrears index from daily overnight fixings and accrual fractions.",
+      "Translate contractual conventions (lookback, lockout, observation shift) into effective coupon settings.",
+      "Compare term and compounded benchmarks to isolate basis risk and hedge implications."
     ],
     "failure_modes": [
       {
-        "mode": "Convention mismatch across legs",
-        "mitigation": "Normalize day-count and accrual calendars before comparison."
+        "mode": "Applying wrong accrual convention",
+        "mitigation": "Implement convention-specific calculators with unit tests for lookback/lockout variants."
+      },
+      {
+        "mode": "Assuming fallback spread is static in risk systems",
+        "mitigation": "Model fallback and basis as explicit stochastic risk factors."
       }
     ],
     "prerequisites": [
-      "Floating-rate note mechanics",
+      "Chapter 10 dependency map context",
+      "Floating-rate cashflow mechanics",
       "Benchmark transition terminology"
     ],
     "exports_to_next_chapter": [
-      "fallback_spread_bp",
-      "all_in_coupon_pct",
-      "coupon_vs_legacy_bp"
+      "compounded_reference_curve",
+      "term_reference_curve",
+      "reference_basis_bp",
+      "fallback_coupon_adjustments",
+      "accrual_convention_flags"
     ]
   },
   "12": {
-    "title": "Chapter 12: Asset-swap decomposition",
-    "learning_objective": "Split bond carry into curve, credit, and package-adjusted asset-swap spread.",
-    "summary": "Decomposes package spread into coupon mismatch and financing drag to isolate executable carry.",
+    "title": "Chapter 12: Asset Swaps",
+    "learning_objective": "Price, decompose, and risk-manage asset-swap packages across credit, curve, and funding dimensions.",
+    "summary": "Builds full asset-swap package valuation from bond cashflows and swap legs, decomposes package spread drivers, and links outputs to executable hedging and monitoring.",
     "quotes": [
-      "Package carry is signal after funding, not before.",
-      "Benchmark misalignment can fake alpha."
+      "Asset swaps are balance-sheet trades wearing valuation equations.",
+      "Package spread without funding context is incomplete risk information."
     ],
     "market_objects": [
-      "z-spread",
-      "par swap rate",
-      "coupon mismatch",
-      "package carry"
+      "cash bond",
+      "par asset-swap package",
+      "z-spread curve",
+      "floating swap leg",
+      "repo funding leg"
     ],
     "equations": [
       {
-        "name": "Asset-swap spread",
-        "equation": "ass_bp=z_spread_bp-(bond_coupon-swap_rate)*100"
+        "name": "Par asset-swap spread",
+        "equation": "ASW=(PV_fixed_bond-PV_float_leg)/PV01_float_leg"
       },
       {
-        "name": "Package carry",
-        "equation": "carry_bp=ass_bp-repo_haircut_bp"
+        "name": "Package P&L decomposition",
+        "equation": "delta_P=DV01*delta_y+CS01*delta_s+Funding01*delta_f+Residual"
+      },
+      {
+        "name": "Carry after funding",
+        "equation": "carry_net=coupon_income-float_paid-repo_cost-hedge_cost"
       }
     ],
     "derivation_steps": [
-      "Measure z-spread and matched swap rate.",
-      "Translate coupon mismatch into basis points.",
-      "Subtract financing drag for package carry."
+      "Discount bond and swap-leg cashflows on consistent collateral curves to solve par package spread.",
+      "Linearize package sensitivities across rates, credit spread, and funding factors for risk attribution.",
+      "Convert spread and carry decomposition into entry thresholds, hedge ratios, and monitoring triggers."
     ],
     "failure_modes": [
       {
-        "mode": "Wrong curve basis",
-        "mitigation": "Align discount/projection setup with CSA and trade terms."
+        "mode": "Curve inconsistency between bond and swap legs",
+        "mitigation": "Use aligned CSA-aware discount/projection setup and reconciliation checks."
+      },
+      {
+        "mode": "Underestimating funding optionality",
+        "mitigation": "Stress repo term structure and specialness scenarios in package valuation."
       }
     ],
     "prerequisites": [
-      "Swap pricing conventions",
-      "Funding cost modeling"
+      "Chapter 11 reference-rate construction",
+      "Swap valuation conventions",
+      "Credit and funding risk decomposition"
     ],
     "exports_to_next_chapter": [
       "asset_swap_spread_bp",
-      "package_carry_bp",
-      "coupon_mismatch_bp"
+      "package_carry_net_bp",
+      "rates_credit_funding_sensitivities",
+      "hedge_ratio_vector",
+      "execution_monitoring_limits"
     ]
   },
   "13": {
