@@ -21,19 +21,25 @@ class Chapter01(ChapterBase):
     def prerequisites(self) -> list[str]:
         return ["Bond pricing basics", "Simple carry math", "Repo funding intuition"]
 
+    def core_claim(self) -> str:
+        return "Observed futures-vs-carry basis, net of financing, maps directly to directional cash-and-carry execution."
+
+    def market_objects(self) -> list[str]:
+        return ["spot bond", "repo funding rate", "futures contract", "basis"]
+
     def concept_map(self) -> dict[str, list[str]]:
         return {
             "nodes": ["Spot", "Repo", "Fair futures", "Basis", "Trade direction"],
             "edges": ["Spot+Repo->Fair futures", "Observed-Fair->Basis", "Basis sign->Trade direction"],
         }
 
-    def equation_set(self) -> list[dict[str, str]]:
+    def technical_equations(self) -> list[dict[str, str]]:
         return [
             {"name": "Fair futures", "equation": "F*=S*exp(r*T)"},
             {"name": "Basis", "equation": "basis=F_mkt-F*"},
         ]
 
-    def derivation_steps(self) -> list[str]:
+    def derivation(self) -> list[str]:
         return [
             "Start from spot purchase financed at repo.",
             "Compound financing to futures maturity.",
@@ -62,13 +68,19 @@ class Chapter01(ChapterBase):
         signal = ExecutionSignalState(action=direction, confidence=min(abs(basis) / 2.0, 0.99), rationale="Basis sign maps directly to cash-and-carry direction.")
         return ExecutableTradeState(joint_spread=joint, signal=signal)
 
+    def trade_interpretation(self) -> list[str]:
+        return [
+            "Positive basis indicates futures rich versus financed spot: buy spot bond and short futures.",
+            "Negative basis indicates reverse cash-and-carry under borrow/shorting feasibility.",
+        ]
+
     def case_studies(self) -> list[dict[str, str]]:
         return [{"name": "Funding squeeze", "setup": "Repo rises while futures unchanged", "takeaway": "Apparent mispricing can be funding-driven."}]
 
-    def failure_modes(self) -> list[dict[str, str]]:
+    def failure_modes_model_risk(self) -> list[dict[str, str]]:
         return [{"mode": "Ignoring transaction costs", "mitigation": "Apply conservative basis threshold net of costs."}]
 
-    def assessment(self) -> list[dict[str, str]]:
+    def checkpoint(self) -> list[dict[str, str]]:
         return [{"prompt": "If basis is +40bp, what trade direction is implied?", "expected": "Cash-and-carry"}]
 
     def exports_to_next_chapter(self) -> ChapterExportState:
@@ -77,3 +89,16 @@ class Chapter01(ChapterBase):
             usage="Used as spread state input for mean-reversion modeling.",
             schema_name="ExecutableTradeState",
         )
+
+    # Backward-compatible method aliases for existing shell components.
+    def equation_set(self) -> list[dict[str, str]]:
+        return self.technical_equations()
+
+    def derivation_steps(self) -> list[str]:
+        return self.derivation()
+
+    def failure_modes(self) -> list[dict[str, str]]:
+        return self.failure_modes_model_risk()
+
+    def assessment(self) -> list[dict[str, str]]:
+        return self.checkpoint()

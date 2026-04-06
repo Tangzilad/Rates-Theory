@@ -9,9 +9,9 @@ from .base import ChapterBase, PlaceholderChapter
 from .ch01_relative_value import Chapter01
 from .ch02_mean_reversion import Chapter02
 from .ch03_factor_pca import Chapter03
-from .ch04_spread_signals import Chapter04
+from .ch04_factor_regime_mapping import Chapter04
 from .ch05_duration_convexity import Chapter05
-from .ch06_portfolio_construction import Chapter06
+from .ch06_multi_curve_construction import Chapter06
 from .ch07_risk_governance import Chapter07
 from .ch08_relative_value_screens import Chapter08
 from .ch09_trade_construction import Chapter09
@@ -31,9 +31,9 @@ CHAPTER_DEPENDENCIES: dict[str, dict[str, list[str]]] = {
     "2": {"1": ["basis", "arbitrage_direction"]},
     "3": {"2": ["hit_probability"]},
     "4": {"3": ["explained_variance"]},
-    "5": {"4": ["z_score"]},
+    "5": {"4": ["regime_score", "regime_label"]},
     "6": {"5": ["fair_price", "curve_slope_bp"]},
-    "7": {"6": ["feasible_weight"]},
+    "7": {"6": ["basis_bp", "discount_factor"]},
     "8": {"7": ["approved"]},
     "9": {"8": ["scenario_value"]},
     "10": {"9": ["scenario_value"]},

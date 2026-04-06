@@ -20,13 +20,19 @@ class Chapter02(ChapterBase):
     def prerequisites(self) -> list[str]:
         return ["Stochastic process notation", "Euler simulation", "Sharpe ratio basics"]
 
+    def core_claim(self) -> str:
+        return "OU calibration links spread dislocations to actionable half-life and barrier-hit risk metrics."
+
+    def market_objects(self) -> list[str]:
+        return ["spread state variable", "mean-reversion speed", "first-passage barrier", "simulated paths"]
+
     def concept_map(self) -> dict[str, list[str]]:
         return {"nodes": ["Theta", "Mu", "Sigma", "Path", "Barrier"], "edges": ["Theta+Mu->Drift", "Sigma->Noise", "Path+Barrier->First-passage"]}
 
-    def equation_set(self) -> list[dict[str, str]]:
+    def technical_equations(self) -> list[dict[str, str]]:
         return [{"name": "OU SDE", "equation": "dX_t=theta(mu-X_t)dt+sigma dW_t"}]
 
-    def derivation_steps(self) -> list[str]:
+    def derivation(self) -> list[str]:
         return ["Discretize the SDE with Euler-Maruyama.", "Generate paths with Gaussian shocks.", "Compute barrier-hitting statistics."]
 
     def interactive_lab(self) -> MeanReversionState:
@@ -81,13 +87,19 @@ class Chapter02(ChapterBase):
             half_life_days=half_life,
         )
 
+    def trade_interpretation(self) -> list[str]:
+        return [
+            "Higher hit probability at target barrier supports quicker convergence trades.",
+            "Long half-life versus holding horizon implies weaker conviction even for large z-scores.",
+        ]
+
     def case_studies(self) -> list[dict[str, str]]:
         return [{"name": "Spread convergence trade", "setup": "Entry on 2-sigma deviation", "takeaway": "Half-life should match expected holding window."}]
 
-    def failure_modes(self) -> list[dict[str, str]]:
+    def failure_modes_model_risk(self) -> list[dict[str, str]]:
         return [{"mode": "Regime shift", "mitigation": "Re-estimate theta and mu with rolling windows and break tests."}]
 
-    def assessment(self) -> list[dict[str, str]]:
+    def checkpoint(self) -> list[dict[str, str]]:
         return [{"prompt": "What happens to first-passage time as theta increases?", "expected": "Barrier is generally hit faster when mean is on the barrier side."}]
 
     def exports_to_next_chapter(self) -> ChapterExportState:
@@ -96,3 +108,15 @@ class Chapter02(ChapterBase):
             usage="Inputs for PCA-based factor-aware signal timing.",
             schema_name="MeanReversionState",
         )
+
+    def equation_set(self) -> list[dict[str, str]]:
+        return self.technical_equations()
+
+    def derivation_steps(self) -> list[str]:
+        return self.derivation()
+
+    def failure_modes(self) -> list[dict[str, str]]:
+        return self.failure_modes_model_risk()
+
+    def assessment(self) -> list[dict[str, str]]:
+        return self.checkpoint()

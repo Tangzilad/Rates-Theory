@@ -7,14 +7,14 @@ Rates-Theory is a fixed-income analytics app that turns chapter-level concepts f
 - Expose quantitative model modules in a Streamlit interface.
 
 ### Chapter-to-Feature Mapping
-| Chapter | Core topic (example) | App feature |
+| Chapter | Core topic | App feature |
 |---|---|---|
-| Chapter 1 | Relative value foundations | Overview dashboard and terminology glossary |
-| Chapter 2 | Curve structure and carry | Curve analytics panel and carry/roll-down views |
-| Chapter 3 | Risk decomposition | Duration, DV01, and key-rate risk explorer |
-| Chapter 4 | Spread/value signals | Spread monitor and ranking views |
-| Chapter 5 | Statistical relative value | Signal generation and z-score diagnostics |
-| Chapter 6 | Portfolio construction | Position sizing and portfolio what-if tools |
+| Chapter 1 | Relative-value foundations and cash-and-carry | Financed fair-futures and basis-direction lab |
+| Chapter 2 | OU mean reversion | Half-life and first-passage simulation lab |
+| Chapter 3 | PCA factor extraction | Explained-variance and loading diagnostics |
+| Chapter 4 | Factor interpretation and regime mapping | Regime scoring, labels, and confidence gating |
+| Chapter 5 | Duration-convexity diagnostics | Shock-to-price approximation and fair-value panel |
+| Chapter 6 | Multi-curve construction | OIS/IBOR discount-forward and basis diagnostics |
 
 > Update this table as your parser indexes exact chapter titles and page spans.
 
@@ -103,13 +103,12 @@ python -m parser.generate_chapter_summaries \
 streamlit run streamlit_app/app.py
 ```
 
-## Model Modules (and chapter/page usage)
-Use this as a reference map for model files. Replace page ranges with parsed metadata once available.
-
-| Module | Purpose | Chapters/pages used |
+## Model Modules (Chapter 1–6 implementation map)
+| Module | Purpose | Used in |
 |---|---|---|
-| `models/duration_model.py` | Computes Macaulay/modified duration and sensitivity metrics. | Chapters on interest-rate risk (e.g., Ch. 3, risk pages). |
-| `models/curve_model.py` | Fits/parses term-structure views and carry/roll-down metrics. | Curve chapters (e.g., Ch. 2, term-structure pages). |
-| `models/spread_model.py` | Builds spread signals and relative value comparisons. | Spread/value chapters (e.g., Ch. 4). |
-| `models/stat_arb_model.py` | Runs z-score/mean-reversion style statistical screens. | Statistical RV chapters (e.g., Ch. 5). |
-| `models/portfolio_model.py` | Position sizing, risk budgeting, and scenario aggregation. | Portfolio construction chapters (e.g., Ch. 6). |
+| `src/models/cash_carry.py` | Computes financed fair futures, basis, and direction for cash-and-carry decisions. | Chapter 1 |
+| `src/models/mean_reversion.py` | Simulates OU paths and computes risk-adjusted convergence diagnostics. | Chapter 2 |
+| `src/models/pca_module.py` | Runs covariance eigendecomposition and factor loading extraction. | Chapter 3 |
+| `src/chapters/ch04_factor_regime_mapping.py` | Converts factors into regime score/label/confidence outputs for gating. | Chapter 4 |
+| `src/models/risk_diagnostics.py` | Applies duration-convexity shock approximation and fair-price estimation. | Chapter 5 |
+| `src/chapters/ch06_multi_curve_construction.py` | Builds simple OIS discount / IBOR projection diagnostics and basis outputs. | Chapter 6 |

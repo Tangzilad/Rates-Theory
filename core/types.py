@@ -40,6 +40,16 @@ class FactorState(_TypedState):
 
 
 @dataclass(frozen=True)
+class RegimeState(_TypedState):
+    level_loading: float
+    slope_loading: float
+    curvature_loading: float
+    regime_score: float
+    regime_label: str
+    regime_confidence: float
+
+
+@dataclass(frozen=True)
 class JointSpreadState(_TypedState):
     fair_futures: float
     basis: float
@@ -57,6 +67,16 @@ class RiskMetricState(_TypedState):
     dy_bp: int
     dp_pct: float
     fair_price: float
+
+
+@dataclass(frozen=True)
+class MultiCurveState(_TypedState):
+    ois_rate_pct: float
+    ibor_rate_pct: float
+    maturity_years: float
+    discount_factor: float
+    forward_rate_pct: float
+    basis_bp: float
 
 
 @dataclass(frozen=True)
