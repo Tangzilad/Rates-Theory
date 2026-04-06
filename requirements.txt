@@ -1,2 +1,8 @@
 streamlit
+pdfplumber
+numpy
+pandas
+scipy
+scikit-learn
+matplotlib
 pytest
