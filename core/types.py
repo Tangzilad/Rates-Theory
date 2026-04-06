@@ -78,12 +78,19 @@ class RelativeValueState(_TypedState):
 
 @dataclass(frozen=True)
 class RiskMetricState(_TypedState):
-    curve_slope_bp: float
-    duration: float
-    convexity: float
-    dy_bp: int
-    dp_pct: float
-    fair_price: float
+    curve_slope_bp: float = 0.0
+    duration: float = 0.0
+    convexity: float = 0.0
+    dy_bp: int = 0
+    dp_pct: float = 0.0
+    fair_price: float = 0.0
+    pv: float = 0.0
+    macaulay_duration: float = 0.0
+    modified_duration: float = 0.0
+    dv01: float = 0.0
+    slope: float = 0.0
+    fair_price_under_shock: float = 0.0
+    approximation_error: float = 0.0
 
 
 @dataclass(frozen=True)
