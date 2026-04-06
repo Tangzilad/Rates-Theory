@@ -169,3 +169,25 @@ class ExecutableTradeState(_TypedState):
     signal: ExecutionSignalState | None = None
     prerequisites_passed: bool = True
     validation_errors: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class GovBondTradeBlueprint(_TypedState):
+    universe: str
+    candidate_bond: str
+    rich_cheap_signal: str
+    richness_bp: float
+    curve_fit_residual_bp: float
+    curve_fit_zscore: float
+    decomposition: dict[str, float]
+    pca_neutralization_applied: bool
+    pca_residual_factor_exposure: float
+    pca_candidate_weights: dict[str, float]
+    mean_reversion_validated: bool
+    mean_reversion_metrics: dict[str, float]
+    risk_metrics: dict[str, float]
+    hedge_comparison: dict[str, dict[str, float]]
+    preferred_hedge: str
+    trade_direction: str
+    conviction: str
+    rationale: str
