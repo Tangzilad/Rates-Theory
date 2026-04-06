@@ -1,8 +1,71 @@
 from __future__ import annotations
 
-from .swap_basis import SwapBasisChapter
+from typing import Any, Dict, List
+
+import streamlit as st
+
+from .common import SimpleChapter
+from .swap_basis import package_state, spread_bp
 
 
-class Chapter12(SwapBasisChapter):
+class Chapter12(SimpleChapter):
     def __init__(self) -> None:
-        super().__init__(chapter_id="12", title="Chapter 12: Swap spread and basis block", objective="Evaluate funding, tenor, and collateral basis relationships.")
+        super().__init__(
+            chapter_id="12",
+            title="Chapter 12: Asset-swap decomposition",
+            objective="Split bond carry into curve, credit, and package-adjusted asset-swap spread.",
+        )
+
+    def equation_set(self) -> List[Dict[str, str]]:
+        return [
+            {"name": "Asset-swap spread", "equation": "ass_bp=z_spread_bp-(bond_coupon-swap_rate)*100"},
+            {"name": "Package carry", "equation": "carry_bp=ass_bp-repo_haircut_bp"},
+        ]
+
+    def derivation_steps(self) -> List[str]:
+        return [
+            "Measure bond z-spread and swap par coupon on matched maturity.",
+            "Convert bond coupon mismatch into bp adjustment.",
+            "Subtract financing drag to isolate executable package carry.",
+        ]
+
+    def interactive_lab(self) -> Dict[str, Any]:
+        z_spread = st.number_input("Bond z-spread (bp)", value=92.0, step=1.0, key="z_12")
+        bond_coupon = st.number_input("Bond coupon (%)", value=4.15, step=0.01, key="coupon_12")
+        swap_rate = st.number_input("Par swap rate (%)", value=3.88, step=0.01, key="swap_12")
+        repo_haircut_bp = st.number_input("Repo / funding drag (bp)", value=14.0, step=1.0, key="repo_12")
+
+        coupon_mismatch_bp = spread_bp(bond_coupon, swap_rate)
+        asset_swap_spread_bp = z_spread - coupon_mismatch_bp
+        package_carry_bp = asset_swap_spread_bp - repo_haircut_bp
+
+        st.metric("Coupon mismatch (bp)", f"{coupon_mismatch_bp:.2f}")
+        st.metric("Asset-swap spread (bp)", f"{asset_swap_spread_bp:.2f}")
+        st.metric("Package carry after funding (bp)", f"{package_carry_bp:.2f}")
+
+        return {
+            "inputs": {
+                "z_spread_bp": z_spread,
+                "bond_coupon_pct": bond_coupon,
+                "swap_rate_pct": swap_rate,
+                "repo_drag_bp": repo_haircut_bp,
+            },
+            "outputs": {
+                "coupon_mismatch_bp": coupon_mismatch_bp,
+                "asset_swap_spread_bp": asset_swap_spread_bp,
+                "package_carry_bp": package_carry_bp,
+            },
+        }
+
+    def failure_modes(self) -> List[Dict[str, str]]:
+        return [
+            {"mode": "Wrong benchmark curve", "mitigation": "Align discount and projection curve choice with trade CSA terms."},
+            {"mode": "Ignoring funding drag", "mitigation": "Embed repo and balance-sheet charges before signal ranking."},
+        ]
+
+    def exports_to_next_chapter(self) -> Dict[str, Any]:
+        return package_state(
+            "AssetSwapState",
+            {"asset_swap_spread_bp": 0.0, "package_carry_bp": 0.0, "coupon_mismatch_bp": 0.0},
+            "Provides clean package spread inputs to the pure-credit extraction chapter.",
+        )
