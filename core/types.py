@@ -39,6 +39,17 @@ class FactorState(_TypedState):
     top_loadings: dict[str, list[float]]
 
 
+
+
+@dataclass(frozen=True)
+class MVOUState(_TypedState):
+    k_matrix: list[list[float]]
+    mu_vector: list[float]
+    covariance_matrix: list[list[float]]
+    expected_path: list[list[float]]
+    simulated_joint_paths: list[list[list[float]]]
+    hedge_suggestions: list[str]
+
 @dataclass(frozen=True)
 class JointSpreadState(_TypedState):
     fair_futures: float

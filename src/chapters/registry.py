@@ -9,7 +9,7 @@ from .base import ChapterBase, PlaceholderChapter
 from .ch01_relative_value import Chapter01
 from .ch02_mean_reversion import Chapter02
 from .ch03_factor_pca import Chapter03
-from .ch04_spread_signals import Chapter04
+from .ch04_multivariate_mean_reversion import Chapter04
 from .ch05_duration_convexity import Chapter05
 from .ch06_portfolio_construction import Chapter06
 from .ch07_risk_governance import Chapter07
