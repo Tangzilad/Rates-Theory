@@ -5,9 +5,9 @@ from typing import Any, Dict, Optional, Tuple
 import streamlit as st
 from core.diagnostics import validate_boundary
 from core.types import (
-    ExecutableTradeState,
     FactorState,
     MeanReversionState,
+    RelativeValueState,
     RiskMetricState,
 )
 from src.chapter_summary_schema import (
@@ -112,7 +112,7 @@ def render_chapter_header(chapter_data: dict, chapter_meta: dict) -> None:
 upstream_exports: Dict[str, Any] = {}
 
 CHAPTER_BOUNDARY_RULES: dict[str, dict[str, type]] = {
-    "2": {"1": ExecutableTradeState},
+    "2": {"1": RelativeValueState},
     "3": {"2": MeanReversionState},
     "5": {"3": FactorState},
     "8": {"5": RiskMetricState},
