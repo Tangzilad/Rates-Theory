@@ -169,3 +169,11 @@ def test_json_serialization_writes_expected_schema_keys(parser_module, tmp_path)
         assert "summary" in item
         assert "quotes" in item
         assert isinstance(item["quotes"], list)
+"""Tests for PDF parser module."""
+
+from src.pdf_parser import parse_pdf
+
+
+def test_parse_pdf_returns_placeholder_dict() -> None:
+    result = parse_pdf("data/Fixed Income Relative Value Analysis.pdf")
+    assert result["status"] == "not_implemented"
