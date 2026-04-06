@@ -32,8 +32,14 @@ class Chapter05(ChapterBase):
     def technical_equations(self) -> list[dict[str, str]]:
         return [{"name": "Price approximation", "equation": "dP/P≈-D*dy+0.5*C*dy^2"}]
 
+    def equation_set(self) -> list[dict[str, str]]:
+        return self.technical_equations()
+
     def derivation(self) -> list[str]:
         return ["Choose dy shock in bp.", "Convert bp to decimal.", "Apply duration-convexity approximation."]
+
+    def derivation_steps(self) -> list[str]:
+        return self.derivation()
 
     def _cashflow_inputs(self) -> tuple[np.ndarray, np.ndarray, float, int]:
         builder = st.radio("Cash-flow input mode", ["Synthetic coupon bond", "Custom cash-flow schedule"], horizontal=True)
@@ -177,8 +183,14 @@ class Chapter05(ChapterBase):
     def failure_modes_model_risk(self) -> list[dict[str, str]]:
         return [{"mode": "Large shock nonlinearity", "mitigation": "Reprice full cashflows beyond local approximation."}]
 
+    def failure_modes(self) -> list[dict[str, str]]:
+        return self.failure_modes_model_risk()
+
     def checkpoint(self) -> list[dict[str, str]]:
         return [{"prompt": "What term dampens duration losses in big moves?", "expected": "Positive convexity term."}]
+
+    def assessment(self) -> list[dict[str, str]]:
+        return self.checkpoint()
 
     def exports_to_next_chapter(self) -> ChapterExportState:
         return ChapterExportState(
