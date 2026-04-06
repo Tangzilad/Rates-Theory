@@ -3,6 +3,11 @@ from pathlib import Path
 from typing import Dict, Tuple
 
 import streamlit as st
+from src.chapter_summary_schema import (
+    ChapterSummarySchemaError,
+    document_to_chapter_map,
+    legacy_map_to_document,
+)
 
 from chapters import build_chapter_registry, get_chapter
 
@@ -10,15 +15,36 @@ from chapters import build_chapter_registry, get_chapter
 st.set_page_config(page_title="Rates Theory Lab", layout="wide")
 
 
-def load_chapter_summaries() -> Tuple[Dict[str, dict], bool]:
-    """Load chapter summaries and return (data, loaded_flag)."""
+def load_chapter_summaries() -> Tuple[Dict[str, dict], bool, Optional[str]]:
+    """Load chapter summaries and return (data, loaded_flag, error_message)."""
     json_path = Path(__file__).resolve().parent.parent / "data" / "chapter_summaries.json"
     if json_path.exists():
         try:
             with json_path.open("r", encoding="utf-8") as f:
-                return json.load(f), True
-        except (json.JSONDecodeError, OSError):
-            pass
+                payload = json.load(f)
+
+            if isinstance(payload, dict) and "schema_version" in payload:
+                return document_to_chapter_map(payload), True, None
+
+            if isinstance(payload, dict):
+                legacy_document = legacy_map_to_document(payload)
+                return document_to_chapter_map(legacy_document), True, (
+                    "Loaded legacy chapter summary JSON and normalized it to schema v1.0."
+                )
+
+            raise ChapterSummarySchemaError(
+                "Malformed chapter summaries file: expected a schema object."
+            )
+        except (json.JSONDecodeError, OSError) as exc:
+            error_message = f"Could not parse chapter summaries JSON ({exc})."
+        except ChapterSummarySchemaError as exc:
+            error_message = str(exc)
+        return _fallback_chapter_summaries(), False, error_message
+
+    return _fallback_chapter_summaries(), False, "Chapter summary JSON file was not found."
+
+
+def _fallback_chapter_summaries() -> Dict[str, dict]:
     fallback = {
         str(i): {
             "title": f"Chapter {i}",
@@ -32,7 +58,7 @@ def load_chapter_summaries() -> Tuple[Dict[str, dict], bool]:
         "summary": "Integrated review of models, diagnostics, and implementation caveats.",
         "quotes": ["Model outputs are only as good as assumptions and data quality."],
     }
-    return fallback, False
+    return fallback
 
 
 def chapter_key_sorter(k: str) -> Tuple[int, str]:
@@ -102,11 +128,11 @@ def render_chapter_contract(selected_key: str) -> None:
 
 
 st.title("Rates Theory Interactive Companion")
-chapter_data_map, loaded = load_chapter_summaries()
-if not loaded:
+chapter_data_map, loaded, chapter_summary_error = load_chapter_summaries()
+if chapter_summary_error:
     st.warning(
-        "`data/chapter_summaries.json` was not found (or could not be parsed). "
-        "Showing fallback chapter summaries."
+        f"{chapter_summary_error} "
+        "Showing fallback chapter summaries where needed."
     )
 
 chapter_keys = sorted(chapter_data_map.keys(), key=chapter_key_sorter)

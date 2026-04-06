@@ -9,6 +9,10 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 import pdfplumber
+from src.chapter_summary_schema import (
+    ChapterSummarySchemaError,
+    parser_summaries_to_document,
+)
 
 
 class BookParser:
@@ -277,10 +281,15 @@ class BookParser:
         if self.chapter_summaries is None:
             self.summarise_chapters()
 
+        try:
+            schema_document = parser_summaries_to_document(self.chapter_summaries or [])
+        except ChapterSummarySchemaError as exc:
+            raise ValueError(f"Could not serialize chapter summaries: {exc}") from exc
+
         output = Path(output_path)
         output.parent.mkdir(parents=True, exist_ok=True)
         with output.open("w", encoding="utf-8") as handle:
-            json.dump(self.chapter_summaries or [], handle, indent=2, ensure_ascii=False)
+            json.dump(schema_document, handle, indent=2, ensure_ascii=False)
         return str(output)
 
     @staticmethod
