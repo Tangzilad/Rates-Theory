@@ -663,23 +663,27 @@
     ],
     "equations": [
       {
-        "name": "Pure credit",
+        "name": "Pure credit residual",
         "equation": "pure_credit_bp=observed_spread_bp-liquidity_bp-technical_bp"
       },
       {
-        "name": "Default intensity proxy",
-        "equation": "hazard=pure_credit_bp/(10000*(1-recovery))"
+        "name": "Hazard-rate proxy",
+        "equation": "lambda_hat=pure_credit_bp/(10000*(1-recovery))"
       }
     ],
     "derivation_steps": [
-      "Start from observed package spread.",
-      "Subtract liquidity and technical components.",
-      "Map residual spread to hazard proxy via recovery assumption."
+      "Begin with all-in observed spread and align measurement windows across bond, CDS, and liquidity proxies.",
+      "Estimate and subtract non-default components (liquidity and technical basis) to isolate pure credit residual.",
+      "Translate residual spread into implied hazard using an explicit recovery assumption and report sensitivity to recovery grid."
     ],
     "failure_modes": [
       {
-        "mode": "Double-counting liquidity effects",
-        "mitigation": "Use orthogonal proxies and reconciliation checks."
+        "mode": "Liquidity proxy contamination",
+        "mitigation": "Cross-check proxy set (bid-ask, depth, fails) and run orthogonality diagnostics."
+      },
+      {
+        "mode": "Recovery misspecification",
+        "mitigation": "Publish scenario band for recovery and require robustness of signal sign."
       }
     ],
     "prerequisites": [
@@ -689,7 +693,65 @@
     "exports_to_next_chapter": [
       "pure_credit_bp",
       "implied_hazard_rate"
-    ]
+    ],
+    "core_claim": "Observed credit spread must be decomposed into default and non-default components before hazard inferences are tradable.",
+    "technical_equations": [
+      {
+        "name": "Pure credit residual",
+        "equation": "pure_credit_bp=observed_spread_bp-liquidity_bp-technical_bp"
+      },
+      {
+        "name": "Hazard-rate proxy",
+        "equation": "lambda_hat=pure_credit_bp/(10000*(1-recovery))"
+      }
+    ],
+    "step_by_step_derivation": [
+      "Begin with all-in observed spread and align measurement windows across bond, CDS, and liquidity proxies.",
+      "Estimate and subtract non-default components (liquidity and technical basis) to isolate pure credit residual.",
+      "Translate residual spread into implied hazard using an explicit recovery assumption and report sensitivity to recovery grid."
+    ],
+    "interactive_lab": {
+      "inputs": [
+        "observed_spread_bp",
+        "liquidity_bp",
+        "technical_bp",
+        "recovery"
+      ],
+      "outputs": [
+        "pure_credit_bp",
+        "implied_hazard_rate"
+      ],
+      "controls": [
+        "recovery_slider",
+        "liquidity_stress_bump_bp"
+      ]
+    },
+    "trade_interpretation": [
+      "Long pure-credit cheapness when residual spread is wide versus peer hazard-implied fair value.",
+      "Size conviction down when hazard estimate is highly sensitive to recovery assumptions."
+    ],
+    "failure_modes_model_risk": [
+      {
+        "mode": "Liquidity proxy contamination",
+        "mitigation": "Cross-check proxy set (bid-ask, depth, fails) and run orthogonality diagnostics."
+      },
+      {
+        "mode": "Recovery misspecification",
+        "mitigation": "Publish scenario band for recovery and require robustness of signal sign."
+      }
+    ],
+    "checkpoint_assessment": {
+      "question": "Which input most directly changes the hazard denominator?",
+      "answer": "recovery",
+      "validation": "Learner explains why (1-recovery) scales implied default intensity."
+    },
+    "exports": {
+      "keys": [
+        "pure_credit_bp",
+        "implied_hazard_rate"
+      ],
+      "handoff": "Used as credit-clean input for tenor and cross-currency basis packaging."
+    }
   },
   "14": {
     "title": "Chapter 14: Intra-currency basis swaps",
@@ -707,7 +769,7 @@
     ],
     "equations": [
       {
-        "name": "Tenor basis edge",
+        "name": "Net tenor basis edge",
         "equation": "basis_edge_bp=observed_basis_bp-fair_basis_bp-implementation_cost_bp"
       },
       {
@@ -716,14 +778,18 @@
       }
     ],
     "derivation_steps": [
-      "Estimate fair intra-currency basis from OIS-projected forwards and collateral assumptions.",
-      "Compare observed quoted basis to fair basis and subtract execution and funding drag.",
-      "Scale conviction into execution confidence used by the next chapter's basis-package allocator."
+      "Construct fair basis from OIS discounting, projection curves, and collateral convention.",
+      "Compute observed-minus-fair dislocation and subtract cost stack (impact, funding, balance-sheet usage).",
+      "Convert residual edge into execution confidence and binary release flag via governance threshold."
     ],
     "failure_modes": [
       {
-        "mode": "Underestimated impact costs",
-        "mitigation": "Calibrate costs by size, venue, and volatility regime."
+        "mode": "Underestimated implementation drag",
+        "mitigation": "Calibrate costs by size/venue and include stressed liquidity add-ons."
+      },
+      {
+        "mode": "Curve-construction inconsistency",
+        "mitigation": "Enforce discount/projection convention checks before signal publication."
       }
     ],
     "prerequisites": [
@@ -734,7 +800,67 @@
       "net_edge_bp",
       "execution_confidence",
       "execute_flag"
-    ]
+    ],
+    "core_claim": "Intra-currency tenor basis should be traded only when fair-value dislocation exceeds fully loaded implementation and funding frictions.",
+    "technical_equations": [
+      {
+        "name": "Net tenor basis edge",
+        "equation": "basis_edge_bp=observed_basis_bp-fair_basis_bp-implementation_cost_bp"
+      },
+      {
+        "name": "Execution confidence",
+        "equation": "execution_confidence=min(1,max(0,basis_edge_bp/entry_hurdle_bp))"
+      }
+    ],
+    "step_by_step_derivation": [
+      "Construct fair basis from OIS discounting, projection curves, and collateral convention.",
+      "Compute observed-minus-fair dislocation and subtract cost stack (impact, funding, balance-sheet usage).",
+      "Convert residual edge into execution confidence and binary release flag via governance threshold."
+    ],
+    "interactive_lab": {
+      "inputs": [
+        "observed_basis_bp",
+        "fair_basis_bp",
+        "implementation_cost_bp",
+        "entry_hurdle_bp"
+      ],
+      "outputs": [
+        "net_edge_bp",
+        "execution_confidence",
+        "execute_flag"
+      ],
+      "controls": [
+        "cost_regime_selector",
+        "threshold_slider_bp"
+      ]
+    },
+    "trade_interpretation": [
+      "Positive net edge with high confidence supports receiving expensive tenor leg / paying cheap leg package.",
+      "Near-threshold signals should remain watchlist ideas instead of immediate execution."
+    ],
+    "failure_modes_model_risk": [
+      {
+        "mode": "Underestimated implementation drag",
+        "mitigation": "Calibrate costs by size/venue and include stressed liquidity add-ons."
+      },
+      {
+        "mode": "Curve-construction inconsistency",
+        "mitigation": "Enforce discount/projection convention checks before signal publication."
+      }
+    ],
+    "checkpoint_assessment": {
+      "question": "Why can gross basis dislocation still be non-tradable?",
+      "answer": "Costs and hurdle can absorb the edge.",
+      "validation": "Learner computes basis_edge_bp and compares to entry_hurdle_bp."
+    },
+    "exports": {
+      "keys": [
+        "net_edge_bp",
+        "execution_confidence",
+        "execute_flag"
+      ],
+      "handoff": "Feeds cross-currency package allocator and expected-return budgeting."
+    }
   },
   "15": {
     "title": "Chapter 15: Cross-currency basis swaps",
@@ -752,23 +878,27 @@
     ],
     "equations": [
       {
-        "name": "Carry from basis",
+        "name": "Carry P&L",
         "equation": "carry_pnl=notional*(annualized_basis_carry_bp/10000)*horizon_years"
       },
       {
-        "name": "Expected package P&L",
+        "name": "Expected total P&L",
         "equation": "expected_total_pnl=carry_pnl+convergence_pnl-hedging_costs"
       }
     ],
     "derivation_steps": [
-      "Map quoted cross-currency basis into annualized carry after collateral and funding conventions.",
-      "Add expected convergence of off-fair basis toward equilibrium over the holding horizon.",
-      "Deduct hedge and balance-sheet costs to compute expected_total_pnl for integrated asset-basis trade calibration."
+      "Convert quoted basis into annualized carry under collateral/funding convention.",
+      "Project convergence component from current basis gap and horizon mean-reversion assumption.",
+      "Subtract hedge/funding costs to obtain expected_total_pnl and decompose contribution shares."
     ],
     "failure_modes": [
       {
-        "mode": "Assuming static curve shape",
-        "mitigation": "Run multi-scenario curve migrations with convexity."
+        "mode": "Horizon mismatch",
+        "mitigation": "Align carry accrual and convergence assumptions with actual holding-period mandate."
+      },
+      {
+        "mode": "Static basis reversion assumption",
+        "mitigation": "Use regime-conditioned convergence speeds and scenario envelopes."
       }
     ],
     "prerequisites": [
@@ -779,7 +909,67 @@
       "carry_pnl",
       "convergence_pnl",
       "expected_total_pnl"
-    ]
+    ],
+    "core_claim": "Cross-currency basis value is realized through carry plus convergence, net of hedge and funding frictions over a defined horizon.",
+    "technical_equations": [
+      {
+        "name": "Carry P&L",
+        "equation": "carry_pnl=notional*(annualized_basis_carry_bp/10000)*horizon_years"
+      },
+      {
+        "name": "Expected total P&L",
+        "equation": "expected_total_pnl=carry_pnl+convergence_pnl-hedging_costs"
+      }
+    ],
+    "step_by_step_derivation": [
+      "Convert quoted basis into annualized carry under collateral/funding convention.",
+      "Project convergence component from current basis gap and horizon mean-reversion assumption.",
+      "Subtract hedge/funding costs to obtain expected_total_pnl and decompose contribution shares."
+    ],
+    "interactive_lab": {
+      "inputs": [
+        "notional",
+        "annualized_basis_carry_bp",
+        "horizon_years",
+        "convergence_pnl",
+        "hedging_costs"
+      ],
+      "outputs": [
+        "carry_pnl",
+        "expected_total_pnl"
+      ],
+      "controls": [
+        "horizon_slider",
+        "funding_spread_stress_bp"
+      ]
+    },
+    "trade_interpretation": [
+      "Prefer packages where expected_total_pnl remains positive under conservative funding scenarios.",
+      "Carry-heavy trades with weak convergence should be capped by path-risk limits."
+    ],
+    "failure_modes_model_risk": [
+      {
+        "mode": "Horizon mismatch",
+        "mitigation": "Align carry accrual and convergence assumptions with actual holding-period mandate."
+      },
+      {
+        "mode": "Static basis reversion assumption",
+        "mitigation": "Use regime-conditioned convergence speeds and scenario envelopes."
+      }
+    ],
+    "checkpoint_assessment": {
+      "question": "Which component captures mark-to-fair normalization?",
+      "answer": "convergence_pnl",
+      "validation": "Learner separates carry income from convergence effect in attribution table."
+    },
+    "exports": {
+      "keys": [
+        "carry_pnl",
+        "convergence_pnl",
+        "expected_total_pnl"
+      ],
+      "handoff": "Inputs integrated hedge sizing for asset-basis-plus-CDS package."
+    }
   },
   "16": {
     "title": "Chapter 16: Integrated asset-basis and CDS",
@@ -797,23 +987,27 @@
     ],
     "equations": [
       {
-        "name": "Integrated hedge ratio",
+        "name": "CDS hedge units",
         "equation": "hedge_ratio_units=(asset_leg_dv01-target_residual_dv01)/cds_leg_dv01_per_unit"
       },
       {
-        "name": "Residual DV01",
+        "name": "Realized residual DV01",
         "equation": "realized_residual_dv01=asset_leg_dv01-hedge_ratio_units*cds_leg_dv01_per_unit"
       }
     ],
     "derivation_steps": [
-      "Estimate the cash-asset and basis package DV01 after carry optimization from chapter 15.",
-      "Solve for CDS hedge units that leave only the desired residual macro-duration footprint.",
-      "Export realized_residual_dv01 to global bond RV so cross-market spreads are compared on hedge-consistent risk."
+      "Aggregate DV01 for cash asset and basis legs after Chapter 15 carry/convergence selection.",
+      "Solve CDS notional (or units) to hit target residual DV01 consistent with macro risk budget.",
+      "Validate realized residual and stress stability before exporting hedge ratio to global RV ranking."
     ],
     "failure_modes": [
       {
-        "mode": "Proxy basis mismatch",
-        "mitigation": "Use multi-factor hedge baskets and beta stability checks."
+        "mode": "Proxy hedge instability",
+        "mitigation": "Track rolling hedge beta and require rebalance triggers."
+      },
+      {
+        "mode": "Stale sensitivities",
+        "mitigation": "Refresh DV01/CS01 on latest curves and spread levels before execution."
       }
     ],
     "prerequisites": [
@@ -823,7 +1017,64 @@
     "exports_to_next_chapter": [
       "hedge_ratio_units",
       "realized_residual_dv01"
-    ]
+    ],
+    "core_claim": "Integrated asset-basis and CDS positions should target desired carry while neutralizing unwanted rate exposure via explicit residual DV01 constraints.",
+    "technical_equations": [
+      {
+        "name": "CDS hedge units",
+        "equation": "hedge_ratio_units=(asset_leg_dv01-target_residual_dv01)/cds_leg_dv01_per_unit"
+      },
+      {
+        "name": "Realized residual DV01",
+        "equation": "realized_residual_dv01=asset_leg_dv01-hedge_ratio_units*cds_leg_dv01_per_unit"
+      }
+    ],
+    "step_by_step_derivation": [
+      "Aggregate DV01 for cash asset and basis legs after Chapter 15 carry/convergence selection.",
+      "Solve CDS notional (or units) to hit target residual DV01 consistent with macro risk budget.",
+      "Validate realized residual and stress stability before exporting hedge ratio to global RV ranking."
+    ],
+    "interactive_lab": {
+      "inputs": [
+        "asset_leg_dv01",
+        "target_residual_dv01",
+        "cds_leg_dv01_per_unit"
+      ],
+      "outputs": [
+        "hedge_ratio_units",
+        "realized_residual_dv01"
+      ],
+      "controls": [
+        "target_residual_slider",
+        "beta_stability_toggle"
+      ]
+    },
+    "trade_interpretation": [
+      "Higher hedge_ratio_units indicates more CDS required to keep package macro-rate neutral.",
+      "If realized residual DV01 drifts from target, rebalance or reduce gross exposure."
+    ],
+    "failure_modes_model_risk": [
+      {
+        "mode": "Proxy hedge instability",
+        "mitigation": "Track rolling hedge beta and require rebalance triggers."
+      },
+      {
+        "mode": "Stale sensitivities",
+        "mitigation": "Refresh DV01/CS01 on latest curves and spread levels before execution."
+      }
+    ],
+    "checkpoint_assessment": {
+      "question": "What confirms hedge calibration success?",
+      "answer": "realized_residual_dv01 approximately equals target_residual_dv01",
+      "validation": "Learner recomputes residual after applying solved hedge units."
+    },
+    "exports": {
+      "keys": [
+        "hedge_ratio_units",
+        "realized_residual_dv01"
+      ],
+      "handoff": "Consumed by global RV stress P&L engine."
+    }
   },
   "17": {
     "title": "Chapter 17: Global bond RV",
@@ -841,23 +1092,27 @@
     ],
     "equations": [
       {
-        "name": "Global RV spread P&L",
+        "name": "Spread-rate stress P&L",
         "equation": "rv_spread_pnl=-(spread_shock_bp*portfolio_cs01 + rate_shock_bp*residual_dv01)"
       },
       {
-        "name": "Stress-adjusted total",
+        "name": "Liquidity-adjusted stress P&L",
         "equation": "total_stress_pnl=rv_spread_pnl-liquidity_haircut"
       }
     ],
     "derivation_steps": [
-      "Project cross-market spread and rate shocks on a hedge-adjusted global RV basket.",
-      "Apply CS01 and residual DV01 to estimate joint mark-to-market drawdown.",
-      "Subtract liquidity haircut to form total_stress_pnl passed to chapter 18 shadow-cost governance."
+      "Apply correlated global spread and rate shock vectors to each hedge-adjusted RV package.",
+      "Compute drawdown using CS01 and residual DV01, then aggregate to scenario stress P&L.",
+      "Deduct liquidity haircut to produce total_stress_pnl used for capital-governed ranking."
     ],
     "failure_modes": [
       {
-        "mode": "Single-factor stress assumptions",
-        "mitigation": "Use correlated multi-factor stress sets."
+        "mode": "Single-factor stress design",
+        "mitigation": "Use correlated multi-factor and region-specific stress templates."
+      },
+      {
+        "mode": "Liquidity haircut underestimation",
+        "mitigation": "Link haircut to market depth and volatility regime indicators."
       }
     ],
     "prerequisites": [
@@ -867,7 +1122,66 @@
     "exports_to_next_chapter": [
       "rv_spread_pnl",
       "total_stress_pnl"
-    ]
+    ],
+    "core_claim": "Global RV ranking must compare hedge-adjusted carry opportunities under joint spread-rate stress and explicit liquidity penalties.",
+    "technical_equations": [
+      {
+        "name": "Spread-rate stress P&L",
+        "equation": "rv_spread_pnl=-(spread_shock_bp*portfolio_cs01 + rate_shock_bp*residual_dv01)"
+      },
+      {
+        "name": "Liquidity-adjusted stress P&L",
+        "equation": "total_stress_pnl=rv_spread_pnl-liquidity_haircut"
+      }
+    ],
+    "step_by_step_derivation": [
+      "Apply correlated global spread and rate shock vectors to each hedge-adjusted RV package.",
+      "Compute drawdown using CS01 and residual DV01, then aggregate to scenario stress P&L.",
+      "Deduct liquidity haircut to produce total_stress_pnl used for capital-governed ranking."
+    ],
+    "interactive_lab": {
+      "inputs": [
+        "spread_shock_bp",
+        "rate_shock_bp",
+        "portfolio_cs01",
+        "residual_dv01",
+        "liquidity_haircut"
+      ],
+      "outputs": [
+        "rv_spread_pnl",
+        "total_stress_pnl"
+      ],
+      "controls": [
+        "scenario_picker",
+        "liquidity_haircut_slider"
+      ]
+    },
+    "trade_interpretation": [
+      "Prefer packages with superior carry per unit of stressed downside after liquidity penalties.",
+      "High gross carry can still rank low if stress losses dominate expected return."
+    ],
+    "failure_modes_model_risk": [
+      {
+        "mode": "Single-factor stress design",
+        "mitigation": "Use correlated multi-factor and region-specific stress templates."
+      },
+      {
+        "mode": "Liquidity haircut underestimation",
+        "mitigation": "Link haircut to market depth and volatility regime indicators."
+      }
+    ],
+    "checkpoint_assessment": {
+      "question": "Why subtract liquidity_haircut after CS01/DV01 stress?",
+      "answer": "To include executable downside, not just theoretical mark-to-market.",
+      "validation": "Learner compares rankings with and without haircut adjustment."
+    },
+    "exports": {
+      "keys": [
+        "rv_spread_pnl",
+        "total_stress_pnl"
+      ],
+      "handoff": "Passed into Chapter 18 capital shadow-cost gate."
+    }
   },
   "18": {
     "title": "Chapter 18: Capital shadow costs",
@@ -885,23 +1199,27 @@
     ],
     "equations": [
       {
-        "name": "Capital charge",
+        "name": "Capital shadow charge",
         "equation": "capital_charge=capital_used*capital_hurdle"
       },
       {
         "name": "Risk-adjusted alpha",
-        "equation": "raa=expected_pnl-capital_charge-funding_charge"
+        "equation": "risk_adjusted_alpha=expected_pnl-capital_charge-funding_charge"
       }
     ],
     "derivation_steps": [
-      "Estimate forward expected P&L.",
-      "Compute capital and funding shadow charges.",
-      "Approve only if risk-adjusted alpha remains positive."
+      "Import expected_pnl and stress diagnostics from prior chapters for candidate packages.",
+      "Compute capital and funding shadow costs under current transfer-pricing and balance-sheet policy.",
+      "Approve trade only if risk_adjusted_alpha remains positive and policy thresholds are met."
     ],
     "failure_modes": [
       {
-        "mode": "Understated hurdle rate",
-        "mitigation": "Align hurdle assumptions with current treasury transfer pricing."
+        "mode": "Outdated hurdle assumptions",
+        "mitigation": "Synchronize with treasury transfer-pricing updates and policy calendar."
+      },
+      {
+        "mode": "Ignoring capital non-linearity at scale",
+        "mitigation": "Run marginal and incremental capital simulations by position size."
       }
     ],
     "prerequisites": [
@@ -912,6 +1230,66 @@
       "capital_charge",
       "risk_adjusted_alpha",
       "approval_flag"
-    ]
+    ],
+    "core_claim": "Final trade approval requires expected alpha to clear capital and funding shadow costs, not just positive gross P&L.",
+    "technical_equations": [
+      {
+        "name": "Capital shadow charge",
+        "equation": "capital_charge=capital_used*capital_hurdle"
+      },
+      {
+        "name": "Risk-adjusted alpha",
+        "equation": "risk_adjusted_alpha=expected_pnl-capital_charge-funding_charge"
+      }
+    ],
+    "step_by_step_derivation": [
+      "Import expected_pnl and stress diagnostics from prior chapters for candidate packages.",
+      "Compute capital and funding shadow costs under current transfer-pricing and balance-sheet policy.",
+      "Approve trade only if risk_adjusted_alpha remains positive and policy thresholds are met."
+    ],
+    "interactive_lab": {
+      "inputs": [
+        "expected_pnl",
+        "capital_used",
+        "capital_hurdle",
+        "funding_charge"
+      ],
+      "outputs": [
+        "capital_charge",
+        "risk_adjusted_alpha",
+        "approval_flag"
+      ],
+      "controls": [
+        "hurdle_rate_slider",
+        "capital_usage_stress_pct"
+      ]
+    },
+    "trade_interpretation": [
+      "Positive risk_adjusted_alpha supports deployment; negative values imply capital is better allocated elsewhere.",
+      "Borderline approvals should include explicit remediation plan (size reduction or cheaper funding path)."
+    ],
+    "failure_modes_model_risk": [
+      {
+        "mode": "Outdated hurdle assumptions",
+        "mitigation": "Synchronize with treasury transfer-pricing updates and policy calendar."
+      },
+      {
+        "mode": "Ignoring capital non-linearity at scale",
+        "mitigation": "Run marginal and incremental capital simulations by position size."
+      }
+    ],
+    "checkpoint_assessment": {
+      "question": "What is the final go/no-go metric?",
+      "answer": "risk_adjusted_alpha and governance approval_flag",
+      "validation": "Learner calculates capital_charge then risk_adjusted_alpha from supplied inputs."
+    },
+    "exports": {
+      "keys": [
+        "capital_charge",
+        "risk_adjusted_alpha",
+        "approval_flag"
+      ],
+      "handoff": "Terminal governance output for portfolio allocation committee."
+    }
   }
 }
