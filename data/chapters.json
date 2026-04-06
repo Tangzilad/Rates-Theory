@@ -164,8 +164,11 @@
       "Macro-rate intuition"
     ],
     "exports_to_next_chapter": [
-      "regime_label",
-      "regime_confidence"
+      "residual_bp",
+      "z_score",
+      "rank_score",
+      "signal_direction",
+      "eligible"
     ]
   },
   "5": {
@@ -245,8 +248,9 @@
       "Swap market conventions"
     ],
     "exports_to_next_chapter": [
-      "discount_factors",
-      "forward_curve"
+      "feasible_weight",
+      "expected_weighted_edge_bp",
+      "within_limits"
     ]
   },
   "7": {
