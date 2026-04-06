@@ -22,4 +22,4 @@ def render_equation_cards(equations: List[Dict[str, str]]) -> None:
                 st.markdown(f"**{name}**")
                 st.code(expression)
 
-    section_expander("Equations", expanded=True, icon="🧮", body=_body)
+    section_expander("3) Technical equations", expanded=True, icon="🧮", body=_body)

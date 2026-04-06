@@ -18,4 +18,4 @@ def render_derivation_panel(steps: List[str]) -> None:
         for idx, step in enumerate(steps, start=1):
             st.markdown(f"{idx}. {step}")
 
-    section_expander("Derivation", expanded=False, icon="🧠", body=_body)
+    section_expander("4) Derivation", expanded=False, icon="🧠", body=_body)
