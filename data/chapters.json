@@ -1,37 +1,42 @@
 {
   "1": {
-    "title": "Chapter 1: Relative-value foundations and cash-and-carry",
-    "learning_objective": "Map mispricing into executable arbitrage direction.",
-    "summary": "Establishes the core fixed-income relative-value identity by linking financed spot, futures fair value, and observable basis into an executable long/short direction.",
+    "title": "Chapter 1: Relative value and cash-and-carry",
+    "learning_objective": "Derive fair value via replication, measure residuals, and map arbitrage direction under explicit frictions.",
+    "summary": "Introduces law-of-one-price intuition, payoff replication, friction-adjusted fair value, basis/residual interpretation, and directional cash-and-carry decisions.",
     "quotes": [
       "Basis sign is a decision rule only after financing is modeled.",
       "Execution discipline turns theoretical edge into realizable P&L."
     ],
     "market_objects": [
       "spot bond",
-      "repo financing curve",
+      "repo funding stack",
       "futures contract",
-      "cash-and-carry basis"
+      "fair value residual",
+      "basis"
     ],
     "equations": [
       {
-        "name": "Fair futures under repo financing",
-        "equation": "F*=S*exp(r_repo*T)"
+        "name": "Payoff equivalence",
+        "equation": "S_T-F_mkt=S_T-F*"
       },
       {
-        "name": "Observed basis",
-        "equation": "basis=F_mkt-F*"
+        "name": "Fair value residual",
+        "equation": "epsilon=V_mkt-V_fair"
+      },
+      {
+        "name": "Basis",
+        "equation": "b=F_mkt-F*"
       }
     ],
     "derivation_steps": [
-      "Finance spot at repo over horizon T.",
-      "Compute no-arbitrage fair futures from financed spot carry.",
-      "Subtract fair from observed futures to infer rich/cheap direction and execution side."
+      "Replication: construct synthetic futures using spot plus financing and matched maturity payoff.",
+      "Fair price: solve no-arbitrage fair value after adding friction layers.",
+      "Residual: compute market minus fair value and map sign to direction and confidence."
     ],
     "failure_modes": [
       {
-        "mode": "Ignoring transaction and balance-sheet costs",
-        "mitigation": "Apply entry threshold net of all-in implementation costs."
+        "mode": "Treating frictions as zero",
+        "mitigation": "Apply transaction costs, repo stress, and balance-sheet costs before trading."
       }
     ],
     "prerequisites": [
@@ -40,9 +45,12 @@
       "Repo mechanics"
     ],
     "exports_to_next_chapter": [
-      "basis",
-      "arbitrage_direction",
-      "confidence"
+      "fair_value",
+      "market_value",
+      "residual",
+      "direction",
+      "confidence",
+      "friction_notes"
     ]
   },
   "2": {
@@ -94,7 +102,7 @@
   "3": {
     "title": "Chapter 3: PCA factor extraction for the rates curve",
     "learning_objective": "Extract orthogonal curve factors for diagnostics.",
-    "summary": "Decomposes tenor-return covariance into orthogonal factors, producing explained-variance diagnostics and loading structures that summarize level/slope/curvature risk.",
+    "summary": "Uses covariance-eigen decomposition to produce factor scores through time, reconstruction controls, residualized series, and candidate factor-neutral hedge weights.",
     "quotes": [
       "Explained variance is a ranking tool, not an economic guarantee.",
       "Stable factors require stable data engineering."
@@ -112,13 +120,28 @@
       },
       {
         "name": "Explained variance ratio",
-        "equation": "EV_i=lambda_i/sum_j lambda_j"
+        "equation": "EV_i=lambda_i/sum(lambda)"
+      },
+      {
+        "name": "Factor scores through time",
+        "equation": "F=ZV"
+      },
+      {
+        "name": "Partial reconstruction with first k PCs",
+        "equation": "X_hat_k=F_kV_k^T"
+      },
+      {
+        "name": "Residualized panel",
+        "equation": "R_k=Z-X_hat_k"
       }
     ],
     "derivation_steps": [
-      "Standardize the tenor-return panel and compute covariance.",
-      "Solve eigenvalues/eigenvectors and rank principal components by variance share.",
-      "Retain dominant factors and inspect loading shapes for economic interpretation."
+      "Standardize input panel into Z-scores matrix Z.",
+      "Compute covariance matrix, then sort eigenpairs descending by eigenvalue.",
+      "Compute factor scores through time F = Z @ eigenvectors.",
+      "Enable selectable reconstruction using first k components (PC1 only, PC1+PC2, etc.).",
+      "Compute residualized panel after removing selected PCs and construct candidate neutral hedge weights.",
+      "Interpret leading factors as likely level/slope/curvature with explicit caveat that PCA factors are statistical."
     ],
     "failure_modes": [
       {
@@ -133,7 +156,10 @@
     ],
     "exports_to_next_chapter": [
       "factor_scores",
-      "explained_variance"
+      "explained_variance",
+      "eigenvectors",
+      "residualized_series",
+      "candidate_neutral_hedge_weights"
     ]
   },
   "4": {
