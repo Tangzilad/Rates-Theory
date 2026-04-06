@@ -115,6 +115,7 @@ CHAPTER_BOUNDARY_RULES: dict[str, dict[str, type]] = {
     "3": {"2": MeanReversionState},
     "5": {"3": FactorState},
     "8": {"5": RiskMetricState},
+    "9": {"2": MeanReversionState, "3": FactorState, "5": RiskMetricState},
 }
 
 
@@ -167,6 +168,9 @@ def render_chapter_contract(selected_key: str) -> None:
 
         lab_payload = chapter.interactive_lab()
         upstream_exports[selected_key] = lab_payload
+        if "chapter_exports" not in st.session_state:
+            st.session_state["chapter_exports"] = {}
+        st.session_state["chapter_exports"][selected_key] = lab_payload
         st.caption("Structured lab payload")
         render_json_payload(lab_payload)
 
