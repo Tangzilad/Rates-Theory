@@ -1,5 +1,4 @@
 import json
-from dataclasses import is_dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
@@ -105,21 +104,6 @@ def render_chapter_header(chapter_data: dict, chapter_meta: dict) -> None:
                     st.markdown(f"- {q}")
 
 
-def normalize_payload(payload: Any) -> Any:
-    if is_dataclass(payload):
-        return payload.model_dump() if hasattr(payload, "model_dump") else payload
-    return payload
-
-
-def render_contract_section(title: str, payload: Any) -> None:
-    st.subheader(title)
-    normalized = normalize_payload(payload)
-    if isinstance(normalized, (dict, list)):
-        st.json(normalized)
-    else:
-        st.write(normalized)
-
-
 CHAPTER_BOUNDARY_RULES: dict[str, dict[str, type]] = {
     "2": {"1": ExecutableTradeState},
     "3": {"2": MeanReversionState},
@@ -142,48 +126,32 @@ def render_chapter_contract(selected_key: str) -> None:
 
     chapter = get_chapter(selected_key, registry, validation_result=validation_result)
 
-    tab_labels = [
-        "Prerequisites",
-        "Concept Map",
-        "Equations",
-        "Derivation",
-        "Interactive Lab",
-        "Case Studies",
-        "Failure Modes",
-        "Assessment",
-        "Exports",
-    ]
-    tabs = st.tabs(tab_labels)
+    render_diagnostics_panel(
+        prerequisites=chapter.prerequisites(),
+        concept_map=chapter.concept_map(),
+        case_studies=chapter.case_studies(),
+        failure_modes=chapter.failure_modes(),
+        exports=chapter.exports_to_next_chapter(),
+    )
+    render_equation_cards(chapter.equation_set())
+    render_derivation_panel(chapter.derivation_steps())
 
-    with tabs[0]:
-        render_contract_section("Prerequisites", chapter.prerequisites())
-    with tabs[1]:
-        render_contract_section("Concept Map", chapter.concept_map())
-    with tabs[2]:
-        render_contract_section("Equation Set", chapter.equation_set())
-    with tabs[3]:
-        render_contract_section("Derivation Steps", chapter.derivation_steps())
-    with tabs[4]:
-        st.subheader("Interactive Lab")
+    def _interactive_lab_body() -> None:
         errors = validate_boundary(selected_key, CHAPTER_BOUNDARY_RULES.get(selected_key, {}), upstream_exports)
         if errors:
             st.error("Upstream export validation failed:")
             for err in errors:
                 st.markdown(f"- {err}")
             st.caption("Run prerequisite chapter labs to populate validated upstream exports.")
-        else:
-            lab_payload = chapter.interactive_lab()
-            upstream_exports[selected_key] = lab_payload
-            st.caption("Structured lab payload")
-            st.json(normalize_payload(lab_payload))
-    with tabs[5]:
-        render_contract_section("Case Studies", chapter.case_studies())
-    with tabs[6]:
-        render_contract_section("Failure Modes", chapter.failure_modes())
-    with tabs[7]:
-        render_contract_section("Assessment", chapter.assessment())
-    with tabs[8]:
-        render_contract_section("Exports to Next Chapter", chapter.exports_to_next_chapter())
+            return
+
+        lab_payload = chapter.interactive_lab()
+        upstream_exports[selected_key] = lab_payload
+        st.caption("Structured lab payload")
+        render_json_payload(lab_payload)
+
+    section_expander("Interactive Lab", expanded=True, icon="🧪", body=_interactive_lab_body)
+    render_quiz_panel(chapter.assessment())
 
 
 st.title("Rates Theory Interactive Companion")
