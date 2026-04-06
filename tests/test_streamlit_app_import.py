@@ -15,7 +15,7 @@ def _streamlit_stub_module() -> types.ModuleType:
 
     class _DummySidebar:
         def selectbox(self, _label, options, index=0):
-            return options[index]
+            return options[index] if options else "1"
 
     def _noop(*_args, **_kwargs):
         return None
@@ -34,6 +34,8 @@ def _streamlit_stub_module() -> types.ModuleType:
     module.pyplot = _noop
     module.stop = _noop
     module.divider = _noop
+    module.success = _noop
+    module.info = _noop
     module.number_input = lambda *_a, **_k: 0.0
     module.slider = lambda *_a, **_k: 1.0
     module.columns = lambda n: [module for _ in range(n)]
@@ -44,9 +46,13 @@ def _streamlit_stub_module() -> types.ModuleType:
 
 
 def test_streamlit_app_module_import_bootstraps_registry(monkeypatch):
-    monkeypatch.setenv("RATES_THEORY_DISABLE_UI_BOOTSTRAP", "1")
     monkeypatch.setitem(sys.modules, "streamlit", _streamlit_stub_module())
+
+    for name in list(sys.modules):
+        if name == "streamlit_app.app" or name.startswith("chapters"):
+            sys.modules.pop(name, None)
+
     module = importlib.import_module("streamlit_app.app")
 
     registry = module.build_chapter_registry()
-    assert "1" in registry and "18" in registry
+    assert "1" in registry

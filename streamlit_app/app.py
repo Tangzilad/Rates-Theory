@@ -1,5 +1,4 @@
 import json
-import os
 from dataclasses import is_dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
@@ -20,6 +19,8 @@ from src.chapter_summary_schema import (
 
 from chapters import build_chapter_registry, get_chapter, validate_chapter_dependencies
 
+
+st.set_page_config(page_title="Rates Theory Lab", layout="wide")
 
 
 def load_chapter_summaries() -> Tuple[Dict[str, dict], bool, Optional[str]]:
@@ -169,32 +170,25 @@ def render_chapter_contract(selected_key: str) -> None:
         render_contract_section("Exports to Next Chapter", chapter.exports_to_next_chapter())
 
 
-def run_app() -> None:
-    st.set_page_config(page_title="Rates Theory Lab", layout="wide")
-    st.title("Rates Theory Interactive Companion")
-    chapter_data_map, loaded, chapter_summary_error = load_chapter_summaries()
-    if not chapter_data_map:
-        chapter_data_map = _fallback_chapter_summaries()
-        if chapter_summary_error is None:
-            chapter_summary_error = "No chapter summaries were available in the JSON payload."
-    if chapter_summary_error:
-        st.warning(
-            f"{chapter_summary_error} "
-            "Showing fallback chapter summaries where needed."
-        )
+st.title("Rates Theory Interactive Companion")
+chapter_data_map, loaded, chapter_summary_error = load_chapter_summaries()
+if chapter_summary_error:
+    st.warning(
+        f"{chapter_summary_error} "
+        "Showing fallback chapter summaries where needed."
+    )
 
+chapter_keys = sorted(chapter_data_map.keys(), key=chapter_key_sorter)
+if not chapter_keys:
+    chapter_data_map = _fallback_chapter_summaries()
     chapter_keys = sorted(chapter_data_map.keys(), key=chapter_key_sorter)
-    selected_key = st.sidebar.selectbox("Select chapter", chapter_keys, index=0)
-    chapter_data = chapter_data_map[selected_key]
-    registry = build_chapter_registry()
-    validation_result = validate_chapter_dependencies(registry)
-    chapter_meta = get_chapter(selected_key, registry, validation_result=validation_result).chapter_meta()
-    render_chapter_header(chapter_data, chapter_meta)
-    render_chapter_contract(selected_key)
+selected_key = st.sidebar.selectbox("Select chapter", chapter_keys, index=0)
+chapter_data = chapter_data_map[selected_key]
+registry = build_chapter_registry()
+validation_result = validate_chapter_dependencies(registry)
+chapter_meta = get_chapter(selected_key, registry, validation_result=validation_result).chapter_meta()
+render_chapter_header(chapter_data, chapter_meta)
+render_chapter_contract(selected_key)
 
-    st.divider()
-    st.caption("Contract-driven UI shell active: chapter content is loaded through the shared chapter interface.")
-
-
-if not os.environ.get("RATES_THEORY_DISABLE_UI_BOOTSTRAP"):
-    run_app()
+st.divider()
+st.caption("Contract-driven UI shell active: chapter content is loaded through the shared chapter interface.")

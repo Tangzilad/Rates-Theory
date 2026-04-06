@@ -9,13 +9,9 @@ from .base import ChapterBase
 from .ch01 import Chapter01
 from .ch02 import Chapter02
 from .ch03 import Chapter03
-from .ch04 import Chapter04
 from .ch05 import Chapter05
-from .ch06 import Chapter06
-from .ch07 import Chapter07
 from .ch08 import Chapter08
 from .ch09 import Chapter09
-from .ch10 import Chapter10
 from .ch11 import Chapter11
 from .ch12 import Chapter12
 from .ch13 import Chapter13
@@ -30,13 +26,9 @@ CHAPTER_DEPENDENCIES: Dict[str, Dict[str, List[str]]] = {
     "1": {},
     "2": {"1": ["basis", "arbitrage_direction"]},
     "3": {"2": ["hit_probability"]},
-    "4": {},
     "5": {"3": ["explained_variance"]},
-    "6": {},
-    "7": {},
     "8": {"5": ["fair_price", "curve_slope_bp"]},
     "9": {"8": ["signals"]},
-    "10": {},
     "11": {"9": ["signals"]},
     "12": {"11": ["swap_spread_bp"]},
     "13": {"12": ["cross_currency_basis_bp"]},
@@ -124,13 +116,9 @@ def build_chapter_registry() -> Dict[str, ChapterBase]:
         "1": Chapter01(),
         "2": Chapter02(),
         "3": Chapter03(),
-        "4": Chapter04(),
         "5": Chapter05(),
-        "6": Chapter06(),
-        "7": Chapter07(),
         "8": Chapter08(),
         "9": Chapter09(),
-        "10": Chapter10(),
         "11": Chapter11(),
         "12": Chapter12(),
         "13": Chapter13(),
