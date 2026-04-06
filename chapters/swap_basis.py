@@ -56,3 +56,14 @@ class SwapBasisChapter(SimpleChapter):
                 "cross_currency_basis_bp": xccy_basis,
             },
         }
+
+    def exports_to_next_chapter(self) -> Dict[str, Any]:
+        return {
+            "signals": [
+                "swap_spread_bp",
+                "asset_swap_spread_bp",
+                "tenor_basis_bp",
+                "cross_currency_basis_bp",
+            ],
+            "usage": "Forward swap and basis diagnostics to the next module in the sequence.",
+        }
