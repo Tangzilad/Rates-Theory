@@ -22,6 +22,14 @@ class ParametricFitResult:
     objective_value: float
 
 
+@dataclass(frozen=True)
+class ResidualRankingResult:
+    labels: list[str]
+    residual_bp: list[float]
+    zscores: list[float]
+    rank_descending: list[int]
+
+
 def _safe_maturity_array(maturities: Iterable[float]) -> np.ndarray:
     return np.maximum(np.asarray(list(maturities), dtype=float), EPSILON)
 
@@ -207,3 +215,48 @@ def constant_maturity_yields(
         tau1=fit_result.params["tau1"],
         tau2=fit_result.params["tau2"],
     )
+
+
+def comparable_residual_zscores(residual_bp: Iterable[float]) -> np.ndarray:
+    values = np.asarray(list(residual_bp), dtype=float)
+    if values.size == 0:
+        return values
+    std = float(np.std(values, ddof=1)) if values.size > 1 else 0.0
+    return (values - float(np.mean(values))) / (std + EPSILON)
+
+
+def rank_residual_series(labels: Iterable[str], residual_bp: Iterable[float]) -> ResidualRankingResult:
+    label_list = list(labels)
+    residual_array = np.asarray(list(residual_bp), dtype=float)
+    if residual_array.size != len(label_list):
+        raise ValueError("labels and residual_bp must have matching lengths")
+    zscores = comparable_residual_zscores(residual_array)
+    order = np.argsort(-residual_array)
+    ranks = np.empty_like(order, dtype=int)
+    ranks[order] = np.arange(1, residual_array.size + 1)
+    return ResidualRankingResult(
+        labels=label_list,
+        residual_bp=[float(x) for x in residual_array],
+        zscores=[float(x) for x in zscores],
+        rank_descending=[int(x) for x in ranks],
+    )
+
+
+def sofr_asw_residuals_bp(
+    *,
+    asset_swap_spread_bp: Iterable[float],
+    sofr_ois_spread_bp: Iterable[float],
+    funding_basis_bp: Iterable[float],
+    credit_difference_bp: Iterable[float],
+    benchmark_choice_bp: Iterable[float],
+) -> np.ndarray:
+    asw = np.asarray(list(asset_swap_spread_bp), dtype=float)
+    sofr = np.asarray(list(sofr_ois_spread_bp), dtype=float)
+    funding = np.asarray(list(funding_basis_bp), dtype=float)
+    credit = np.asarray(list(credit_difference_bp), dtype=float)
+    benchmark = np.asarray(list(benchmark_choice_bp), dtype=float)
+    shape = asw.shape
+    if not (shape == sofr.shape == funding.shape == credit.shape == benchmark.shape):
+        raise ValueError("All SOFR-ASW residual inputs must share the same shape")
+    fair = sofr + funding + credit + benchmark
+    return asw - fair

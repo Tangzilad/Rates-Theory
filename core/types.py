@@ -299,6 +299,53 @@ class RelativeValueScreenState(_TypedState):
     outlier_mode: str
     scenario_value: float
 
+
+@dataclass(frozen=True)
+class GlobalRVBondSignalState(_TypedState):
+    bond_id: str
+    region: str
+    maturity_years: float
+    observed_yield_pct: float
+    curve_residual_bp: float
+    curve_residual_zscore: float
+    curve_rank: int
+    sofr_asw_residual_bp: float
+    sofr_asw_residual_zscore: float
+    sofr_asw_rank: int
+    rank_gap: int
+    disagreement_flag: bool
+    curve_mismatch_bp: float
+    funding_basis_bp: float
+    credit_difference_bp: float
+    benchmark_choice_bp: float
+    composite_signal_score: float
+    preferred_trade_direction: str
+
+
+@dataclass(frozen=True)
+class GlobalRVDisagreementState(_TypedState):
+    disagreement_count: int
+    disagreement_share: float
+    mean_rank_gap: float
+    max_rank_gap: int
+    top_disagreement_bonds: list[str]
+
+
+@dataclass(frozen=True)
+class GlobalRVScreenState(_TypedState):
+    universe_source: str
+    fit_method: str
+    fitted_curve_parameters: dict[str, float]
+    bond_signals: list[GlobalRVBondSignalState]
+    curve_ranking: list[str]
+    sofr_asw_ranking: list[str]
+    disagreement_diagnostics: GlobalRVDisagreementState
+    attribution_buckets_bp: dict[str, float]
+    portfolio_selection_signals: dict[str, float | str | list[str]]
+    residual_rmse_bp: float
+    rv_spread_pnl: float
+    total_stress_pnl: float
+
 @dataclass(frozen=True)
 class ExecutionSignalState(_TypedState):
     action: str
