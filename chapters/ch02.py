@@ -8,7 +8,7 @@ import streamlit as st
 
 from core.derivations import ou_half_life_days
 from core.types import ChapterExportState, MeanReversionState
-from src.models.mean_reversion import sharpe_ratio, simulate_ou
+from src.models.ou import sharpe_ratio, simulate_ou
 
 from .base import ChapterBase
 
@@ -32,6 +32,7 @@ class Chapter02(ChapterBase):
         return ["Discretize the SDE with Euler-Maruyama.", "Generate paths with Gaussian shocks.", "Compute barrier-hitting statistics."]
 
     def interactive_lab(self) -> MeanReversionState:
+        st.caption("Pedagogical simplification: OU paths use Euler discretization and simplified barrier diagnostics.")
         c1, c2, c3, c4 = st.columns(4)
         theta = c1.slider("Mean reversion speed (theta)", 0.05, 3.0, 1.0, 0.05)
         mu = c2.number_input("Long-run mean (mu)", value=0.0, step=0.1)

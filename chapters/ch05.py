@@ -5,7 +5,7 @@ from typing import Any, Dict, List
 import streamlit as st
 
 from core.types import ChapterExportState, RiskMetricState
-from src.models.risk_diagnostics import shock_adjusted_bond_state
+from src.models.risk_measures import shock_adjusted_bond_state
 
 from .base import ChapterBase
 
@@ -29,6 +29,7 @@ class Chapter05(ChapterBase):
         return ["Choose dy shock in bp.", "Convert bp to decimal.", "Apply duration-convexity approximation."]
 
     def interactive_lab(self) -> RiskMetricState:
+        st.caption("Pedagogical simplification: duration-convexity approximation assumes a parallel yield shock.")
         y2 = st.number_input("2Y yield (%)", value=3.70, step=0.01)
         y10 = st.number_input("10Y yield (%)", value=4.10, step=0.01)
         duration = st.number_input("Modified duration", value=7.2, step=0.1)

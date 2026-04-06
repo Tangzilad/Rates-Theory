@@ -6,6 +6,7 @@ import streamlit as st
 
 from .common import SimpleChapter
 from .swap_basis import package_state
+from src.models.cds import implied_hazard_rate, pure_credit_spread
 
 
 class Chapter13(SimpleChapter):
@@ -30,13 +31,14 @@ class Chapter13(SimpleChapter):
         ]
 
     def interactive_lab(self) -> Dict[str, Any]:
+        st.caption("Pedagogical simplification: pure-credit spread and hazard mapping use a flat-intensity approximation.")
         observed_spread = st.number_input("Observed package spread (bp)", value=118.0, step=1.0, key="obs_13")
         liquidity_component = st.number_input("Liquidity premium (bp)", value=21.0, step=1.0, key="liq_13")
         technical_component = st.number_input("Technical basis (bp)", value=9.0, step=1.0, key="tech_13")
         recovery = st.slider("Recovery assumption", min_value=0.2, max_value=0.7, value=0.4, step=0.01, key="rec_13")
 
-        pure_credit = observed_spread - liquidity_component - technical_component
-        hazard = pure_credit / (10_000.0 * max(1e-6, 1.0 - recovery))
+        pure_credit = pure_credit_spread(observed_spread, liquidity_component, technical_component)
+        hazard = implied_hazard_rate(pure_credit, recovery)
 
         st.metric("Pure-credit spread (bp)", f"{pure_credit:.2f}")
         st.metric("Implied hazard (annualized)", f"{hazard:.4%}")

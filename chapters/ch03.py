@@ -9,7 +9,7 @@ import streamlit as st
 
 from core.market_data import synthetic_tenor_matrix
 from core.types import ChapterExportState, FactorState
-from src.models.pca_module import run_pca
+from src.models.pca import run_pca
 
 from .base import ChapterBase
 
@@ -33,6 +33,7 @@ class Chapter03(ChapterBase):
         return ["Standardize numeric columns.", "Compute covariance matrix.", "Sort eigenpairs descending by eigenvalue."]
 
     def interactive_lab(self) -> FactorState:
+        st.caption("Pedagogical simplification: PCA uses standardized covariance eigen-decomposition without regime adjustments.")
         source = st.radio("Data source", ["Synthetic sample", "Upload CSV"], horizontal=True)
         df = None
         if source == "Upload CSV":
