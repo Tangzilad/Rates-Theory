@@ -211,6 +211,24 @@ class DependencyMapState(_TypedState):
 
 
 @dataclass(frozen=True)
+class AssetSwapState(_TypedState):
+    z_spread_bp: float
+    bond_coupon_pct: float
+    benchmark_rate_pct: float
+    reference_rate_name: str
+    benchmark_type: str
+    package_upfront_pct: float
+    repo_funding_rate_pct: float
+    funding_shift_bp: float
+    coupon_mismatch_bp: float
+    asset_swap_spread_bp: float
+    package_carry_bp: float
+    fair_package_level_bp: float
+    funding_sensitivity_bp_per_1bp: float
+    simplification_notes: list[str]
+
+
+@dataclass(frozen=True)
 class CurvePoint(_TypedState):
     maturity_years: float
     rate_pct: float
