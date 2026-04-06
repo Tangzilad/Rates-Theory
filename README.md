@@ -64,7 +64,27 @@ Chapter metadata loading path (project convention):
 data/chapters.json
 ```
 
-Current chapter summary/schema loader in app runtime:
+## Curated Chapter Data (Primary Source)
+The Streamlit app now reads chapter content from:
+
+```text
+data/chapters.json
+```
+
+This file is keyed by `"1"` through `"18"` and each chapter includes:
+- `title`
+- `learning_objective`
+- `summary`
+- `quotes`
+- `market_objects`
+- `equations`
+- `derivation_steps`
+- `failure_modes`
+- `prerequisites`
+- `exports_to_next_chapter`
+
+## Generate Chapter Summaries (Optional Helper Metadata)
+Parser/summarizer output is optional helper metadata and should be written to:
 
 ```text
 data/chapter_summaries.json
@@ -86,9 +106,9 @@ data/Fixed Income Relative Value Analysis.pdf
 
 Generate chapter summary artifacts to:
 
-```text
-data/chapter_summaries.json
-```
+Implementation note:
+- `BookParser.save_summaries_json()` transforms parser-native fields (`chapter_number`, `summary_sentences`, `quote_candidates`) into this canonical contract.
+- Parser summaries are merged into chapter records as optional helper metadata and are not the sole source for equations or derivations.
 
 ## Testing
 Run the full test suite:

@@ -1,7 +1,6 @@
 import json
-from dataclasses import is_dataclass
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import streamlit as st
 from core.diagnostics import validate_boundary
@@ -14,59 +13,63 @@ from core.types import (
 from src.chapter_summary_schema import (
     ChapterSummarySchemaError,
     document_to_chapter_map,
-    legacy_map_to_document,
+    parse_chapters_map,
 )
 
-from chapters import build_chapter_registry, get_chapter, validate_chapter_dependencies
+from src.chapters.registry import build_chapter_registry, get_chapter, validate_chapter_dependencies
 
 
 st.set_page_config(page_title="Rates Theory Lab", layout="wide")
 
 
-def load_chapter_summaries() -> Tuple[Dict[str, dict], bool, Optional[str]]:
-    """Load chapter summaries and return (data, loaded_flag, error_message)."""
+def load_primary_chapters() -> Tuple[Dict[str, dict], Optional[str]]:
+    """Load curated chapter content from data/chapters.json."""
+    json_path = Path(__file__).resolve().parent.parent / "data" / "chapters.json"
+    try:
+        with json_path.open("r", encoding="utf-8") as f:
+            payload = json.load(f)
+        return parse_chapters_map(payload), None
+    except FileNotFoundError:
+        return {}, f"Required chapter content file not found at {json_path}."
+    except (json.JSONDecodeError, OSError) as exc:
+        return {}, f"Could not parse chapter content JSON ({exc})."
+    except ChapterSummarySchemaError as exc:
+        return {}, str(exc)
+
+
+def load_parser_helper_metadata() -> Tuple[Dict[str, dict], Optional[str]]:
+    """Load optional parser-derived helper metadata from data/chapter_summaries.json."""
     json_path = Path(__file__).resolve().parent.parent / "data" / "chapter_summaries.json"
-    if json_path.exists():
-        try:
-            with json_path.open("r", encoding="utf-8") as f:
-                payload = json.load(f)
-
-            if isinstance(payload, dict) and "schema_version" in payload:
-                return document_to_chapter_map(payload), True, None
-
-            if isinstance(payload, dict):
-                legacy_document = legacy_map_to_document(payload)
-                return document_to_chapter_map(legacy_document), True, (
-                    "Loaded legacy chapter summary JSON and normalized it to schema v1.0."
-                )
-
+    if not json_path.exists():
+        return {}, None
+    try:
+        with json_path.open("r", encoding="utf-8") as f:
+            payload = json.load(f)
+        if not isinstance(payload, dict) or "schema_version" not in payload:
             raise ChapterSummarySchemaError(
-                "Malformed chapter summaries file: expected a schema object."
+                "Optional parser helper metadata must use schema v1.0 with 'schema_version'."
             )
-        except (json.JSONDecodeError, OSError) as exc:
-            error_message = f"Could not parse chapter summaries JSON ({exc})."
-        except ChapterSummarySchemaError as exc:
-            error_message = str(exc)
-        return _fallback_chapter_summaries(), False, error_message
-
-    return _fallback_chapter_summaries(), False, "Chapter summary JSON file was not found."
+        return document_to_chapter_map(payload), None
+    except (json.JSONDecodeError, OSError) as exc:
+        return {}, f"Could not parse optional parser helper metadata ({exc})."
+    except ChapterSummarySchemaError as exc:
+        return {}, str(exc)
 
 
-def _fallback_chapter_summaries() -> Dict[str, dict]:
-    fallback = {
-        str(i): {
-            "title": f"Chapter {i}",
-            "summary": "Summary file missing; using built-in fallback content.",
-            "quotes": ["Add data/chapter_summaries.json to see curated chapter excerpts."],
-        }
-        for i in range(1, 25)
-    }
-    fallback["final"] = {
-        "title": "Final Chapters",
-        "summary": "Integrated review of models, diagnostics, and implementation caveats.",
-        "quotes": ["Model outputs are only as good as assumptions and data quality."],
-    }
-    return fallback
+def merge_parser_helper_metadata(
+    primary: Dict[str, dict], parser_helper: Dict[str, dict]
+) -> Dict[str, dict]:
+    merged: Dict[str, dict] = {}
+    for key, chapter in primary.items():
+        merged_chapter = dict(chapter)
+        helper = parser_helper.get(key)
+        if helper:
+            merged_chapter["helper_metadata"] = {
+                "parser_summary": helper.get("summary", ""),
+                "parser_quotes": helper.get("quotes", []),
+            }
+        merged[key] = merged_chapter
+    return merged
 
 
 def chapter_key_sorter(k: str) -> Tuple[int, str]:
@@ -78,6 +81,9 @@ def chapter_key_sorter(k: str) -> Tuple[int, str]:
 def render_chapter_header(chapter_data: dict, chapter_meta: dict) -> None:
     st.header(chapter_meta.get("title", chapter_data.get("title", "Chapter")))
     st.write(chapter_data.get("summary", chapter_meta.get("objective", "No summary available.")))
+    learning_objective = chapter_data.get("learning_objective")
+    if learning_objective:
+        st.caption(f"Learning objective: {learning_objective}")
     quotes = chapter_data.get("quotes", [])
     with st.expander("Key quotes"):
         if quotes:
@@ -85,21 +91,17 @@ def render_chapter_header(chapter_data: dict, chapter_meta: dict) -> None:
                 st.markdown(f"- {q}")
         else:
             st.write("No quotes available.")
-
-
-def normalize_payload(payload: Any) -> Any:
-    if is_dataclass(payload):
-        return payload.model_dump() if hasattr(payload, "model_dump") else payload
-    return payload
-
-
-def render_contract_section(title: str, payload: Any) -> None:
-    st.subheader(title)
-    normalized = normalize_payload(payload)
-    if isinstance(normalized, (dict, list)):
-        st.json(normalized)
-    else:
-        st.write(normalized)
+    helper = chapter_data.get("helper_metadata", {})
+    if helper:
+        with st.expander("Parser-derived helper metadata (optional)"):
+            parser_summary = helper.get("parser_summary")
+            parser_quotes = helper.get("parser_quotes", [])
+            if parser_summary:
+                st.write(parser_summary)
+            if parser_quotes:
+                st.markdown("**Candidate quotes**")
+                for q in parser_quotes:
+                    st.markdown(f"- {q}")
 
 
 CHAPTER_BOUNDARY_RULES: dict[str, dict[str, type]] = {
@@ -124,57 +126,44 @@ def render_chapter_contract(selected_key: str) -> None:
 
     chapter = get_chapter(selected_key, registry, validation_result=validation_result)
 
-    tab_labels = [
-        "Prerequisites",
-        "Concept Map",
-        "Equations",
-        "Derivation",
-        "Interactive Lab",
-        "Case Studies",
-        "Failure Modes",
-        "Assessment",
-        "Exports",
-    ]
-    tabs = st.tabs(tab_labels)
+    render_diagnostics_panel(
+        prerequisites=chapter.prerequisites(),
+        concept_map=chapter.concept_map(),
+        case_studies=chapter.case_studies(),
+        failure_modes=chapter.failure_modes(),
+        exports=chapter.exports_to_next_chapter(),
+    )
+    render_equation_cards(chapter.equation_set())
+    render_derivation_panel(chapter.derivation_steps())
 
-    with tabs[0]:
-        render_contract_section("Prerequisites", chapter.prerequisites())
-    with tabs[1]:
-        render_contract_section("Concept Map", chapter.concept_map())
-    with tabs[2]:
-        render_contract_section("Equation Set", chapter.equation_set())
-    with tabs[3]:
-        render_contract_section("Derivation Steps", chapter.derivation_steps())
-    with tabs[4]:
-        st.subheader("Interactive Lab")
+    def _interactive_lab_body() -> None:
         errors = validate_boundary(selected_key, CHAPTER_BOUNDARY_RULES.get(selected_key, {}), upstream_exports)
         if errors:
             st.error("Upstream export validation failed:")
             for err in errors:
                 st.markdown(f"- {err}")
             st.caption("Run prerequisite chapter labs to populate validated upstream exports.")
-        else:
-            lab_payload = chapter.interactive_lab()
-            upstream_exports[selected_key] = lab_payload
-            st.caption("Structured lab payload")
-            st.json(normalize_payload(lab_payload))
-    with tabs[5]:
-        render_contract_section("Case Studies", chapter.case_studies())
-    with tabs[6]:
-        render_contract_section("Failure Modes", chapter.failure_modes())
-    with tabs[7]:
-        render_contract_section("Assessment", chapter.assessment())
-    with tabs[8]:
-        render_contract_section("Exports to Next Chapter", chapter.exports_to_next_chapter())
+            return
+
+        lab_payload = chapter.interactive_lab()
+        upstream_exports[selected_key] = lab_payload
+        st.caption("Structured lab payload")
+        render_json_payload(lab_payload)
+
+    section_expander("Interactive Lab", expanded=True, icon="🧪", body=_interactive_lab_body)
+    render_quiz_panel(chapter.assessment())
 
 
 st.title("Rates Theory Interactive Companion")
-chapter_data_map, loaded, chapter_summary_error = load_chapter_summaries()
+chapter_data_map, chapter_summary_error = load_primary_chapters()
 if chapter_summary_error:
-    st.warning(
-        f"{chapter_summary_error} "
-        "Showing fallback chapter summaries where needed."
-    )
+    st.error(chapter_summary_error)
+    st.stop()
+
+parser_metadata_map, parser_metadata_error = load_parser_helper_metadata()
+if parser_metadata_error:
+    st.warning(parser_metadata_error)
+chapter_data_map = merge_parser_helper_metadata(chapter_data_map, parser_metadata_map)
 
 chapter_keys = sorted(chapter_data_map.keys(), key=chapter_key_sorter)
 selected_key = st.sidebar.selectbox("Select chapter", chapter_keys, index=0)

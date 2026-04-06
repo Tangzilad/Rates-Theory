@@ -1,14 +1,41 @@
 """Model package for Rates-Theory."""
 
-from . import cash_carry, mean_reversion, mvou, options, pca_module, risk_diagnostics, swap_spreads, yield_curve
+from . import (
+    asset_swaps,
+    cash_carry,
+    ccbs,
+    cds,
+    icbs,
+    integrated_rv,
+    mean_reversion,
+    mvou,
+    options,
+    ou,
+    pca,
+    pca_module,
+    risk_diagnostics,
+    risk_measures,
+    shadow_costs,
+    swap_spreads,
+    yield_curve,
+)
 
 __all__ = [
+    "asset_swaps",
     "cash_carry",
+    "ccbs",
+    "cds",
+    "icbs",
+    "integrated_rv",
     "mean_reversion",
     "mvou",
     "options",
+    "ou",
+    "pca",
     "pca_module",
     "risk_diagnostics",
+    "risk_measures",
+    "shadow_costs",
     "swap_spreads",
     "yield_curve",
 ]

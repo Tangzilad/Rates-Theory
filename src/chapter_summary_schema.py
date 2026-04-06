@@ -1,4 +1,4 @@
-"""Shared schema contract for chapter summary JSON data."""
+"""Shared schema contracts for chapter metadata and parser helper JSON data."""
 
 from __future__ import annotations
 
@@ -22,6 +22,93 @@ SCHEMA_VERSION = "1.0"
 
 class ChapterSummarySchemaError(ValueError):
     """Raised when payload does not satisfy the chapter-summary schema."""
+
+
+CHAPTER_REQUIRED_FIELDS = [
+    "title",
+    "learning_objective",
+    "summary",
+    "quotes",
+    "market_objects",
+    "equations",
+    "derivation_steps",
+    "failure_modes",
+    "prerequisites",
+    "exports_to_next_chapter",
+]
+
+
+def parse_chapters_map(payload: Any) -> Dict[str, Dict[str, Any]]:
+    """Validate and normalize the primary chapter content map (keys '1'..'18')."""
+    if not isinstance(payload, dict):
+        raise ChapterSummarySchemaError("Top-level chapter content JSON must be an object keyed by chapter number.")
+
+    normalized: Dict[str, Dict[str, Any]] = {}
+    expected_keys = {str(i) for i in range(1, 19)}
+    actual_keys = set(payload.keys())
+    missing = sorted(expected_keys - actual_keys, key=int)
+    extra = sorted(k for k in actual_keys - expected_keys)
+
+    if missing:
+        raise ChapterSummarySchemaError(f"Missing chapter keys in chapter content JSON: {missing}.")
+    if extra:
+        raise ChapterSummarySchemaError(f"Unexpected chapter keys in chapter content JSON: {extra}.")
+
+    for key in sorted(expected_keys, key=int):
+        chapter = payload.get(key)
+        if not isinstance(chapter, dict):
+            raise ChapterSummarySchemaError(f"Chapter '{key}' must be an object.")
+
+        missing_fields = [field for field in CHAPTER_REQUIRED_FIELDS if field not in chapter]
+        if missing_fields:
+            raise ChapterSummarySchemaError(
+                f"Chapter '{key}' is missing required fields: {missing_fields}."
+            )
+
+        normalized[key] = {
+            "title": str(chapter.get("title", "")).strip() or f"Chapter {key}",
+            "learning_objective": str(chapter.get("learning_objective", "")).strip(),
+            "summary": str(chapter.get("summary", "")).strip(),
+            "quotes": _normalize_string_list(chapter.get("quotes"), "quotes"),
+            "market_objects": _normalize_string_list(chapter.get("market_objects"), "market_objects"),
+            "equations": _normalize_object_list(chapter.get("equations"), "equations"),
+            "derivation_steps": _normalize_string_list(chapter.get("derivation_steps"), "derivation_steps"),
+            "failure_modes": _normalize_object_list(chapter.get("failure_modes"), "failure_modes"),
+            "prerequisites": _normalize_string_list(chapter.get("prerequisites"), "prerequisites"),
+            "exports_to_next_chapter": _normalize_string_list(
+                chapter.get("exports_to_next_chapter"), "exports_to_next_chapter"
+            ),
+        }
+
+    return normalized
+
+
+def _normalize_object_list(raw: Any, field_name: str) -> List[Dict[str, Any]]:
+    if raw is None:
+        return []
+    if not isinstance(raw, list):
+        raise ChapterSummarySchemaError(f"'{field_name}' must be a list of objects.")
+    out: List[Dict[str, Any]] = []
+    for item in raw:
+        if not isinstance(item, dict):
+            raise ChapterSummarySchemaError(f"Each item in '{field_name}' must be an object.")
+        out.append(item)
+    return out
+
+
+def _normalize_string_list(raw: Any, field_name: str) -> List[str]:
+    if raw is None:
+        return []
+    if not isinstance(raw, list):
+        raise ChapterSummarySchemaError(f"'{field_name}' must be a list of strings.")
+    out: List[str] = []
+    for item in raw:
+        if not isinstance(item, str):
+            raise ChapterSummarySchemaError(f"Each item in '{field_name}' must be a string.")
+        value = item.strip()
+        if value:
+            out.append(value)
+    return out
 
 
 def _normalize_quotes(raw: Any) -> List[str]:

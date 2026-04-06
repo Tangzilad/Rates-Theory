@@ -5,9 +5,31 @@ from typing import Any, Dict, List
 import streamlit as st
 
 from core.types import FundingBasisState
-from src.models.swap_spreads import asset_swap_spread, cross_currency_basis, intra_currency_basis
+from src.models.asset_swaps import decompose_asset_swap
+from src.models.ccbs import cross_currency_basis
+from src.models.icbs import intra_currency_basis
 
 from .common import SimpleChapter
+
+
+def spread_bp(lhs_pct: float, rhs_pct: float) -> float:
+    """Return lhs-rhs spread in basis points."""
+    return (lhs_pct - rhs_pct) * 100.0
+
+
+def carry_pnl(notional: float, carry_bp: float, horizon_years: float) -> float:
+    """Convert annualized carry in bp into horizon P&L dollars."""
+    return notional * (carry_bp / 10_000.0) * horizon_years
+
+
+def clamp_confidence(value: float) -> float:
+    """Clamp confidence score into [0, 1]."""
+    return max(0.0, min(1.0, value))
+
+
+def package_state(schema_name: str, values: Dict[str, float], usage: str) -> Dict[str, Any]:
+    """Build a simple chapter export payload."""
+    return {"schema_name": schema_name, "signals": list(values.keys()), "defaults": values, "usage": usage}
 
 
 class SwapBasisChapter(SimpleChapter):
@@ -18,6 +40,7 @@ class SwapBasisChapter(SimpleChapter):
         ]
 
     def interactive_lab(self) -> FundingBasisState:
+        st.caption("Pedagogical simplification: asset swap, ICBS, and CCBS analytics are additive spread decompositions.")
         key = self.chapter_id
         c1, c2, c3 = st.columns(3)
         swap_rate = c1.number_input("Par swap rate (%)", value=4.15, step=0.01, key=f"swap_{key}")
@@ -31,13 +54,18 @@ class SwapBasisChapter(SimpleChapter):
         fx_hedge_cost = st.number_input("FX hedge cost (%)", value=0.95, step=0.01, key=f"fx_{key}")
 
         swap_spread = (swap_rate - gov_yield) * 100
-        asw_spread = asset_swap_spread(par_swap_rate=swap_rate, bond_yield=bond_coupon) * 100 + z_spread
-        tenor_basis = intra_currency_basis(float_leg_a=tenor_long, float_leg_b=tenor_short) * 100
+        _, asw_spread, _ = decompose_asset_swap(
+            z_spread_bp=z_spread,
+            bond_coupon_pct=bond_coupon,
+            swap_rate_pct=swap_rate,
+            repo_drag_bp=0.0,
+        )
+        tenor_basis = intra_currency_basis(float_leg_a_pct=tenor_long, float_leg_b_pct=tenor_short)
         xccy_basis = cross_currency_basis(
-            domestic_float_rate=usd_leg,
-            foreign_float_rate=eur_leg,
-            fx_forward_implied_rate=fx_hedge_cost,
-        ) * 100
+            domestic_float_rate_pct=usd_leg,
+            foreign_float_rate_pct=eur_leg,
+            fx_forward_implied_rate_pct=fx_hedge_cost,
+        )
 
         st.metric("Swap spread (bp)", f"{swap_spread:.2f}")
         st.metric("Asset-swap spread (bp)", f"{asw_spread:.2f}")
@@ -58,7 +86,7 @@ class SwapBasisChapter(SimpleChapter):
             },
             "outputs": {
                 "swap_spread_bp": swap_spread,
-                "asset_swap_spread_bp": asset_swap_spread,
+                "asset_swap_spread_bp": asw_spread,
                 "tenor_basis_bp": tenor_basis,
                 "cross_currency_basis_bp": xccy_basis,
             },
