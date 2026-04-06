@@ -6,6 +6,7 @@ import streamlit as st
 
 from .common import SimpleChapter
 from .swap_basis import package_state
+from src.models.shadow_costs import capital_shadow_state
 
 
 class Chapter18(SimpleChapter):
@@ -30,14 +31,18 @@ class Chapter18(SimpleChapter):
         ]
 
     def interactive_lab(self) -> Dict[str, Any]:
+        st.caption("Pedagogical simplification: capital and funding shadow costs are represented with scalar annual charges.")
         expected_pnl = st.number_input("Expected annual P&L ($)", value=1_250_000.0, step=50_000.0, key="pnl_18")
         capital_used = st.number_input("Allocated economic capital ($)", value=8_000_000.0, step=250_000.0, key="cap_18")
         capital_hurdle = st.slider("Capital hurdle rate", min_value=0.05, max_value=0.25, value=0.13, step=0.005, key="hurdle_18")
         funding_charge = st.number_input("Funding shadow charge ($)", value=220_000.0, step=10_000.0, key="fund_18")
 
-        capital_charge = capital_used * capital_hurdle
-        risk_adjusted_alpha = expected_pnl - capital_charge - funding_charge
-        approval_flag = risk_adjusted_alpha > 0
+        capital_charge, risk_adjusted_alpha, approval_flag = capital_shadow_state(
+            expected_pnl,
+            capital_used,
+            capital_hurdle,
+            funding_charge,
+        )
 
         st.metric("Capital charge ($)", f"{capital_charge:,.0f}")
         st.metric("Risk-adjusted alpha ($)", f"{risk_adjusted_alpha:,.0f}")

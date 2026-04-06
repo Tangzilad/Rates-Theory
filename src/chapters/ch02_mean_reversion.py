@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List
-
 import matplotlib.pyplot as plt
 import numpy as np
 import streamlit as st
 
 from core.derivations import ou_half_life_days
 from core.types import ChapterExportState, MeanReversionState
-from src.models.ou import sharpe_ratio, simulate_ou
+from src.models.mean_reversion import sharpe_ratio, simulate_ou
 
 from .base import ChapterBase
 
@@ -16,23 +14,22 @@ from .base import ChapterBase
 class Chapter02(ChapterBase):
     chapter_id = "2"
 
-    def chapter_meta(self) -> Dict[str, Any]:
+    def chapter_meta(self) -> dict[str, str]:
         return {"chapter": self.chapter_id, "title": "Chapter 2: OU mean reversion", "objective": "Quantify spread reversion and first-passage risk."}
 
-    def prerequisites(self) -> List[str]:
+    def prerequisites(self) -> list[str]:
         return ["Stochastic process notation", "Euler simulation", "Sharpe ratio basics"]
 
-    def concept_map(self) -> Dict[str, List[str]]:
+    def concept_map(self) -> dict[str, list[str]]:
         return {"nodes": ["Theta", "Mu", "Sigma", "Path", "Barrier"], "edges": ["Theta+Mu->Drift", "Sigma->Noise", "Path+Barrier->First-passage"]}
 
-    def equation_set(self) -> List[Dict[str, str]]:
+    def equation_set(self) -> list[dict[str, str]]:
         return [{"name": "OU SDE", "equation": "dX_t=theta(mu-X_t)dt+sigma dW_t"}]
 
-    def derivation_steps(self) -> List[str]:
+    def derivation_steps(self) -> list[str]:
         return ["Discretize the SDE with Euler-Maruyama.", "Generate paths with Gaussian shocks.", "Compute barrier-hitting statistics."]
 
     def interactive_lab(self) -> MeanReversionState:
-        st.caption("Pedagogical simplification: OU paths use Euler discretization and simplified barrier diagnostics.")
         c1, c2, c3, c4 = st.columns(4)
         theta = c1.slider("Mean reversion speed (theta)", 0.05, 3.0, 1.0, 0.05)
         mu = c2.number_input("Long-run mean (mu)", value=0.0, step=0.1)
@@ -84,13 +81,13 @@ class Chapter02(ChapterBase):
             half_life_days=half_life,
         )
 
-    def case_studies(self) -> List[Dict[str, str]]:
+    def case_studies(self) -> list[dict[str, str]]:
         return [{"name": "Spread convergence trade", "setup": "Entry on 2-sigma deviation", "takeaway": "Half-life should match expected holding window."}]
 
-    def failure_modes(self) -> List[Dict[str, str]]:
+    def failure_modes(self) -> list[dict[str, str]]:
         return [{"mode": "Regime shift", "mitigation": "Re-estimate theta and mu with rolling windows and break tests."}]
 
-    def assessment(self) -> List[Dict[str, str]]:
+    def assessment(self) -> list[dict[str, str]]:
         return [{"prompt": "What happens to first-passage time as theta increases?", "expected": "Barrier is generally hit faster when mean is on the barrier side."}]
 
     def exports_to_next_chapter(self) -> ChapterExportState:

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -9,7 +7,7 @@ import streamlit as st
 
 from core.market_data import synthetic_tenor_matrix
 from core.types import ChapterExportState, FactorState
-from src.models.pca import run_pca
+from src.models.pca_module import run_pca
 
 from .base import ChapterBase
 
@@ -17,23 +15,22 @@ from .base import ChapterBase
 class Chapter03(ChapterBase):
     chapter_id = "3"
 
-    def chapter_meta(self) -> Dict[str, Any]:
+    def chapter_meta(self) -> dict[str, str]:
         return {"chapter": self.chapter_id, "title": "Chapter 3: PCA factor extraction", "objective": "Extract orthogonal curve factors for diagnostics."}
 
-    def prerequisites(self) -> List[str]:
+    def prerequisites(self) -> list[str]:
         return ["Covariance matrix", "Eigenvectors/eigenvalues", "Yield curve tenors"]
 
-    def concept_map(self) -> Dict[str, List[str]]:
+    def concept_map(self) -> dict[str, list[str]]:
         return {"nodes": ["Returns", "Standardization", "Covariance", "Eigenpairs", "Factors"], "edges": ["Returns->Standardization", "Standardization->Covariance", "Covariance->Eigenpairs", "Eigenpairs->Factors"]}
 
-    def equation_set(self) -> List[Dict[str, str]]:
+    def equation_set(self) -> list[dict[str, str]]:
         return [{"name": "Explained variance", "equation": "EV_i=lambda_i/sum(lambda)"}]
 
-    def derivation_steps(self) -> List[str]:
+    def derivation_steps(self) -> list[str]:
         return ["Standardize numeric columns.", "Compute covariance matrix.", "Sort eigenpairs descending by eigenvalue."]
 
     def interactive_lab(self) -> FactorState:
-        st.caption("Pedagogical simplification: PCA uses standardized covariance eigen-decomposition without regime adjustments.")
         source = st.radio("Data source", ["Synthetic sample", "Upload CSV"], horizontal=True)
         df = None
         if source == "Upload CSV":
@@ -71,19 +68,15 @@ class Chapter03(ChapterBase):
         ax2.legend()
         st.pyplot(fig2)
 
-        return FactorState(
-            columns=cols,
-            explained_variance=explained.tolist(),
-            top_loadings={f"PC{i + 1}": evecs[:, i].tolist() for i in range(max_factors)},
-        )
+        return FactorState(columns=cols, explained_variance=explained.tolist(), top_loadings={f"PC{i + 1}": evecs[:, i].tolist() for i in range(max_factors)})
 
-    def case_studies(self) -> List[Dict[str, str]]:
+    def case_studies(self) -> list[dict[str, str]]:
         return [{"name": "Level/slope/curvature decomposition", "setup": "Daily curve changes", "takeaway": "First factors usually explain most variance."}]
 
-    def failure_modes(self) -> List[Dict[str, str]]:
+    def failure_modes(self) -> list[dict[str, str]]:
         return [{"mode": "Using raw non-stationary levels", "mitigation": "Use changes/returns and monitor factor stability."}]
 
-    def assessment(self) -> List[Dict[str, str]]:
+    def assessment(self) -> list[dict[str, str]]:
         return [{"prompt": "Why standardize before PCA?", "expected": "To avoid scale-dominated factors."}]
 
     def exports_to_next_chapter(self) -> ChapterExportState:
