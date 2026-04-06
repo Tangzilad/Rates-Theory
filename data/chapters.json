@@ -536,7 +536,7 @@
   "11": {
     "title": "Chapter 11: Reference Rates",
     "learning_objective": "Compare and operationalize overnight and term reference rates for pricing, accrual, and risk transfer.",
-    "summary": "Covers construction and usage of SOFR, €STR, SONIA, and term benchmarks; links compounding conventions to coupon cashflows, discounting, and basis risk.",
+    "summary": "Covers construction and usage of SOFR, \u20acSTR, SONIA, and term benchmarks; links compounding conventions to coupon cashflows, discounting, and basis risk.",
     "quotes": [
       "Reference rate choice is an exposure choice.",
       "Compounding conventions are valuation parameters, not clerical detail."
@@ -692,8 +692,8 @@
     ]
   },
   "14": {
-    "title": "Chapter 14: Executable trade design",
-    "learning_objective": "Convert spread signals into sized trades with slippage-aware entry filters.",
+    "title": "Chapter 14: Intra-currency basis swaps",
+    "learning_objective": "Measure and trade tenor-basis dislocations within one currency curve while accounting for funding frictions.",
     "summary": "Applies cost-aware thresholds and confidence scaling to decide whether a modeled opportunity should be released for execution.",
     "quotes": [
       "Execution confidence should shrink faster than edge in stressed liquidity.",
@@ -707,18 +707,18 @@
     ],
     "equations": [
       {
-        "name": "Expected edge",
-        "equation": "edge_bp=signal_bp-transaction_cost_bp"
+        "name": "Tenor basis edge",
+        "equation": "basis_edge_bp=observed_basis_bp-fair_basis_bp-implementation_cost_bp"
       },
       {
         "name": "Execution confidence",
-        "equation": "confidence=edge_bp/entry_threshold_bp"
+        "equation": "execution_confidence=min(1,max(0,basis_edge_bp/entry_hurdle_bp))"
       }
     ],
     "derivation_steps": [
-      "Estimate pre-cost signal edge.",
-      "Subtract transaction and slippage costs.",
-      "Scale confidence and gate execution decision."
+      "Estimate fair intra-currency basis from OIS-projected forwards and collateral assumptions.",
+      "Compare observed quoted basis to fair basis and subtract execution and funding drag.",
+      "Scale conviction into execution confidence used by the next chapter's basis-package allocator."
     ],
     "failure_modes": [
       {
@@ -737,8 +737,8 @@
     ]
   },
   "15": {
-    "title": "Chapter 15: Carry and rolldown budgeting",
-    "learning_objective": "Project forward P&L from carry and curve roll under realistic holding windows.",
+    "title": "Chapter 15: Cross-currency basis swaps",
+    "learning_objective": "Translate cross-currency basis dislocations into expected carry-plus-convergence P&L for hedge-funded packages.",
     "summary": "Builds forward return estimates from carry and rolldown, net of implementation costs and horizon assumptions.",
     "quotes": [
       "Carry is time income only if position survives path risk.",
@@ -752,18 +752,18 @@
     ],
     "equations": [
       {
-        "name": "Carry P&L",
-        "equation": "carry_pnl=notional*(carry_bp/10000)*horizon"
+        "name": "Carry from basis",
+        "equation": "carry_pnl=notional*(annualized_basis_carry_bp/10000)*horizon_years"
       },
       {
-        "name": "Total expected P&L",
-        "equation": "total=carry_pnl+rolldown_pnl-costs"
+        "name": "Expected package P&L",
+        "equation": "expected_total_pnl=carry_pnl+convergence_pnl-hedging_costs"
       }
     ],
     "derivation_steps": [
-      "Set notional and holding horizon.",
-      "Compute carry and rolldown contributions.",
-      "Subtract implementation costs for net expected P&L."
+      "Map quoted cross-currency basis into annualized carry after collateral and funding conventions.",
+      "Add expected convergence of off-fair basis toward equilibrium over the holding horizon.",
+      "Deduct hedge and balance-sheet costs to compute expected_total_pnl for integrated asset-basis trade calibration."
     ],
     "failure_modes": [
       {
@@ -777,13 +777,13 @@
     ],
     "exports_to_next_chapter": [
       "carry_pnl",
-      "rolldown_pnl",
+      "convergence_pnl",
       "expected_total_pnl"
     ]
   },
   "16": {
-    "title": "Chapter 16: Hedge calibration",
-    "learning_objective": "Size macro and idiosyncratic hedges to keep spread trades inside risk budgets.",
+    "title": "Chapter 16: Integrated asset-basis and CDS",
+    "learning_objective": "Jointly size cash-bond, basis-swap, and CDS legs to preserve target carry while controlling residual rate risk.",
     "summary": "Calibrates hedge ratios using DV01 targets and residual risk constraints for portfolio-consistent risk control.",
     "quotes": [
       "Perfect hedges are rare; controlled residuals are the goal.",
@@ -797,18 +797,18 @@
     ],
     "equations": [
       {
-        "name": "Hedge ratio",
-        "equation": "hedge_ratio=target_dv01/hedge_dv01"
+        "name": "Integrated hedge ratio",
+        "equation": "hedge_ratio_units=(asset_leg_dv01-target_residual_dv01)/cds_leg_dv01_per_unit"
       },
       {
         "name": "Residual DV01",
-        "equation": "residual=trade_dv01-hedge_ratio*hedge_dv01"
+        "equation": "realized_residual_dv01=asset_leg_dv01-hedge_ratio_units*cds_leg_dv01_per_unit"
       }
     ],
     "derivation_steps": [
-      "Estimate trade and hedge instrument DV01.",
-      "Solve for hedge units under residual-risk target.",
-      "Validate realized residual against limits."
+      "Estimate the cash-asset and basis package DV01 after carry optimization from chapter 15.",
+      "Solve for CDS hedge units that leave only the desired residual macro-duration footprint.",
+      "Export realized_residual_dv01 to global bond RV so cross-market spreads are compared on hedge-consistent risk."
     ],
     "failure_modes": [
       {
@@ -826,8 +826,8 @@
     ]
   },
   "17": {
-    "title": "Chapter 17: Scenario and stress engine",
-    "learning_objective": "Quantify trade robustness under spread, rates, and liquidity shock combinations.",
+    "title": "Chapter 17: Global bond RV",
+    "learning_objective": "Rank relative-value bond packages across regions using hedge-adjusted spread carry and stress-aware downside filters.",
     "summary": "Computes stressed P&L envelopes from spread/rate sensitivities and liquidity penalties for downside governance.",
     "quotes": [
       "Stress testing is about joint moves, not single shocks.",
@@ -841,18 +841,18 @@
     ],
     "equations": [
       {
-        "name": "Stress P&L",
-        "equation": "stress_pnl=-(spread_shock_bp*cs01 + rate_shock_bp*dv01)"
+        "name": "Global RV spread P&L",
+        "equation": "rv_spread_pnl=-(spread_shock_bp*portfolio_cs01 + rate_shock_bp*residual_dv01)"
       },
       {
-        "name": "Total stress",
-        "equation": "total_stress=stress_pnl-liquidity_penalty"
+        "name": "Stress-adjusted total",
+        "equation": "total_stress_pnl=rv_spread_pnl-liquidity_haircut"
       }
     ],
     "derivation_steps": [
-      "Define coherent spread and rate shock vectors.",
-      "Apply sensitivities to compute mark-to-market stress loss.",
-      "Subtract liquidity liquidation add-on."
+      "Project cross-market spread and rate shocks on a hedge-adjusted global RV basket.",
+      "Apply CS01 and residual DV01 to estimate joint mark-to-market drawdown.",
+      "Subtract liquidity haircut to form total_stress_pnl passed to chapter 18 shadow-cost governance."
     ],
     "failure_modes": [
       {
@@ -865,7 +865,7 @@
       "Stress-testing framework"
     ],
     "exports_to_next_chapter": [
-      "core_stress_pnl",
+      "rv_spread_pnl",
       "total_stress_pnl"
     ]
   },

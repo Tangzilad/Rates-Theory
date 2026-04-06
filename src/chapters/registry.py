@@ -19,10 +19,10 @@ from .ch10_funding_basis import Chapter10
 from .ch11_reference_rate_transition import Chapter11
 from .ch12_asset_swap_decomposition import Chapter12
 from .ch13_pure_credit_extraction import Chapter13
-from .ch14_executable_trade_design import Chapter14
-from .ch15_carry_rolldown import Chapter15
-from .ch16_hedge_calibration import Chapter16
-from .ch17_scenario_stress import Chapter17
+from .ch14_intra_currency_basis_swaps import Chapter14
+from .ch15_cross_currency_basis_swaps import Chapter15
+from .ch16_integrated_asset_basis_cds import Chapter16
+from .ch17_global_bond_rv import Chapter17
 from .ch18_shadow_costs import Chapter18
 
 
