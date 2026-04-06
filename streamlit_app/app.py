@@ -17,6 +17,11 @@ from src.chapter_summary_schema import (
 )
 
 from src.chapters.registry import build_chapter_registry, get_chapter, validate_chapter_dependencies
+from src.ui.components import render_json_payload, section_expander
+from src.ui.derivation_panel import render_derivation_panel
+from src.ui.diagnostics_panel import render_diagnostics_panel
+from src.ui.equation_cards import render_equation_cards
+from src.ui.quiz_panel import render_quiz_panel
 
 
 st.set_page_config(page_title="Rates Theory Lab", layout="wide")
@@ -103,6 +108,8 @@ def render_chapter_header(chapter_data: dict, chapter_meta: dict) -> None:
                 for q in parser_quotes:
                     st.markdown(f"- {q}")
 
+
+upstream_exports: Dict[str, Any] = {}
 
 CHAPTER_BOUNDARY_RULES: dict[str, dict[str, type]] = {
     "2": {"1": ExecutableTradeState},
