@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import is_dataclass
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, List, Dict
 
 import streamlit as st
 
@@ -29,6 +29,29 @@ def render_bulleted_lines(lines: Iterable[str], empty_message: str = "No content
             st.markdown(f"- {line}")
     else:
         st.caption(empty_message)
+
+
+def render_struct_cards(
+    items: List[Dict[str, str]],
+    primary_key: str,
+    secondary_key: str | None = None,
+    empty_message: str = "No items available.",
+) -> None:
+    """Render a list of dicts as bordered cards with a bolded primary field and optional secondary."""
+    if not items:
+        st.caption(empty_message)
+        return
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        with st.container(border=True):
+            primary = item.get(primary_key, "")
+            if primary:
+                st.markdown(f"**{primary}**")
+            if secondary_key:
+                secondary = item.get(secondary_key, "")
+                if secondary:
+                    st.markdown(secondary)
 
 
 def section_expander(

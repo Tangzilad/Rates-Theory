@@ -208,9 +208,3 @@ class Chapter01(ChapterBase):
 
     def derivation_steps(self) -> list[str]:
         return self.derivation()
-
-    def failure_modes(self) -> list[dict[str, str]]:
-        return self.failure_modes_model_risk()
-
-    def assessment(self) -> list[dict[str, str]]:
-        return self.checkpoint()
