@@ -29,7 +29,7 @@ from .ch18_shadow_costs import Chapter18
 CHAPTER_DEPENDENCIES: dict[str, dict[str, list[str]]] = {
     "1": {},
     "2": {"1": ["basis", "arbitrage_direction"]},
-    "3": {"2": ["hit_probability"]},
+    "3": {"2": ["first_passage_probability", "current_z_score"]},
     "4": {"3": ["explained_variance"]},
     "5": {"4": ["z_score"]},
     "6": {"5": ["fair_price", "curve_slope_bp"]},

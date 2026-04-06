@@ -25,11 +25,12 @@ class MeanReversionState(_TypedState):
     mu: float
     sigma: float
     x0: float
-    barrier: float
-    hit_probability: float
-    mean_fpt_days: float | None
+    current_z_score: float
+    half_life: float | None
+    first_passage_probability: float
+    mean_first_passage_time: float | None
     terminal_sharpe: float
-    half_life_days: float | None
+    conditional_expectation_term_structure: dict[str, list[float]]
 
 
 @dataclass(frozen=True)
