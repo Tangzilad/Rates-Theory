@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import streamlit as st
 
+from core.types import ChapterExportState, ReferenceRateState
+
 from .base import SimpleChapter
 
 
@@ -26,7 +28,7 @@ class Chapter11(SimpleChapter):
             "Apply contractual spread adjustment to estimate all-in reset coupon.",
         ]
 
-    def interactive_lab(self) -> dict[str, dict[str, float]]:
+    def interactive_lab(self) -> ReferenceRateState:
         legacy_fixing = st.number_input("Legacy tenor fixing (%)", value=5.02, step=0.01, key="legacy_11")
         rfr_compounded = st.number_input("Compounded RFR (%)", value=4.71, step=0.01, key="rfr_11")
         contract_adj = st.number_input("Contract spread adjustment (bp)", value=26.0, step=1.0, key="adj_11")
@@ -39,7 +41,25 @@ class Chapter11(SimpleChapter):
         st.metric("All-in reset coupon (%)", f"{all_in_coupon:.3f}")
         st.metric("Coupon vs legacy (bp)", f"{delta_to_legacy_bp:.2f}")
 
-        return {"inputs": {"legacy_fixing_pct": legacy_fixing, "rfr_compounded_pct": rfr_compounded, "contract_adjustment_bp": contract_adj}, "outputs": {"fallback_spread_bp": fallback_bp, "all_in_coupon_pct": all_in_coupon, "coupon_vs_legacy_bp": delta_to_legacy_bp}}
+        return ReferenceRateState(
+            legacy_fixing_pct=legacy_fixing,
+            rfr_compounded_pct=rfr_compounded,
+            contract_adjustment_bp=contract_adj,
+            fallback_spread_bp=fallback_bp,
+            all_in_coupon_pct=all_in_coupon,
+            coupon_vs_legacy_bp=delta_to_legacy_bp,
+        )
 
-    def exports_to_next_chapter(self) -> dict[str, object]:
-        return {"schema_name": "ReferenceRateState", "signals": ["fallback_spread_bp", "all_in_coupon_pct", "coupon_vs_legacy_bp"], "usage": "Feeds asset-swap decomposition with standardized floating benchmark assumptions."}
+    def exports_to_next_chapter(self) -> ChapterExportState:
+        return ChapterExportState(
+            schema_name="ReferenceRateState",
+            signals=[
+                "legacy_fixing_pct",
+                "rfr_compounded_pct",
+                "contract_adjustment_bp",
+                "fallback_spread_bp",
+                "all_in_coupon_pct",
+                "coupon_vs_legacy_bp",
+            ],
+            usage="Feeds asset-swap decomposition with standardized floating benchmark assumptions.",
+        )

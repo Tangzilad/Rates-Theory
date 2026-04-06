@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import streamlit as st
 
+from core.types import ChapterExportState, FuturesBasisState
+
 from .base import ChapterBase
 
 
@@ -31,7 +33,7 @@ class Chapter07(ChapterBase):
             "Assign governance status and escalation path based on utilization bands.",
         ]
 
-    def interactive_lab(self) -> dict[str, float | str | bool]:
+    def interactive_lab(self) -> FuturesBasisState:
         proposed = st.number_input("Proposed risk usage ($/bp)", value=140_000.0, step=5_000.0, key="prop_7")
         limit = st.number_input("Approved risk limit ($/bp)", value=180_000.0, step=5_000.0, key="limit_7")
         warn_band = st.slider("Warning threshold", min_value=0.5, max_value=0.95, value=0.8, step=0.05, key="warn_7")
@@ -50,7 +52,7 @@ class Chapter07(ChapterBase):
         st.metric("Governance status", status.upper())
         st.info("TODO: add aggregated multi-factor breaches, exception workflow routing, and audit log integration.")
 
-        return {"utilization": utilization, "headroom": headroom, "status": status, "approved": status != "red"}
+        return FuturesBasisState(utilization=utilization, headroom=headroom, status=status, approved=status != "red")
 
     def case_studies(self) -> list[dict[str, str]]:
         return [{"name": "Pre-trade check", "setup": "High-conviction signal with tight residual limit", "takeaway": "Governance traffic-lighting protects portfolio mandate consistency."}]
@@ -61,5 +63,9 @@ class Chapter07(ChapterBase):
     def assessment(self) -> list[dict[str, str]]:
         return [{"prompt": "When does amber status trigger?", "expected": "When utilization exceeds warning threshold but remains below hard limit."}]
 
-    def exports_to_next_chapter(self) -> dict[str, object]:
-        return {"signals": ["utilization", "status", "approved"], "usage": "Controls whether positions proceed into Chapter 8 implementation screens."}
+    def exports_to_next_chapter(self) -> ChapterExportState:
+        return ChapterExportState(
+            signals=["utilization", "headroom", "status", "approved"],
+            usage="Controls whether positions proceed into Chapter 8 implementation screens.",
+            schema_name="FuturesBasisState",
+        )

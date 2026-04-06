@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import streamlit as st
 
+from core.types import AssetSwapState, ChapterExportState
+
 from .base import SimpleChapter
 
 
@@ -26,7 +28,7 @@ class Chapter12(SimpleChapter):
             "Subtract financing drag to isolate executable package carry.",
         ]
 
-    def interactive_lab(self) -> dict[str, dict[str, float]]:
+    def interactive_lab(self) -> AssetSwapState:
         z_spread = st.number_input("Bond z-spread (bp)", value=92.0, step=1.0, key="z_12")
         bond_coupon = st.number_input("Bond coupon (%)", value=4.15, step=0.01, key="coupon_12")
         swap_rate = st.number_input("Par swap rate (%)", value=3.88, step=0.01, key="swap_12")
@@ -40,7 +42,27 @@ class Chapter12(SimpleChapter):
         st.metric("Asset-swap spread (bp)", f"{asset_swap_spread_bp:.2f}")
         st.metric("Package carry after funding (bp)", f"{package_carry_bp:.2f}")
 
-        return {"inputs": {"z_spread_bp": z_spread, "bond_coupon_pct": bond_coupon, "swap_rate_pct": swap_rate, "repo_drag_bp": repo_haircut_bp}, "outputs": {"coupon_mismatch_bp": coupon_mismatch_bp, "asset_swap_spread_bp": asset_swap_spread_bp, "package_carry_bp": package_carry_bp}}
+        return AssetSwapState(
+            z_spread_bp=z_spread,
+            bond_coupon_pct=bond_coupon,
+            swap_rate_pct=swap_rate,
+            repo_drag_bp=repo_haircut_bp,
+            coupon_mismatch_bp=coupon_mismatch_bp,
+            asset_swap_spread_bp=asset_swap_spread_bp,
+            package_carry_bp=package_carry_bp,
+        )
 
-    def exports_to_next_chapter(self) -> dict[str, object]:
-        return {"schema_name": "AssetSwapState", "signals": ["asset_swap_spread_bp", "package_carry_bp", "coupon_mismatch_bp"], "usage": "Provides clean package spread inputs to pure-credit extraction."}
+    def exports_to_next_chapter(self) -> ChapterExportState:
+        return ChapterExportState(
+            schema_name="AssetSwapState",
+            signals=[
+                "z_spread_bp",
+                "bond_coupon_pct",
+                "swap_rate_pct",
+                "repo_drag_bp",
+                "coupon_mismatch_bp",
+                "asset_swap_spread_bp",
+                "package_carry_bp",
+            ],
+            usage="Provides clean package spread inputs to pure-credit extraction.",
+        )

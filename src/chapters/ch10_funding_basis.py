@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import streamlit as st
 
+from core.types import ChapterExportState, FundingBasisState
+
 from .base import ChapterBase
 
 
@@ -31,7 +33,7 @@ class Chapter10(ChapterBase):
             "Apply basis wedge to fair spread and carry projections used downstream.",
         ]
 
-    def interactive_lab(self) -> dict[str, float]:
+    def interactive_lab(self) -> FundingBasisState:
         swap_float = st.number_input("Swap floating leg (%)", value=4.85, step=0.01, key="swap_10")
         cash_funding = st.number_input("Cash funding rate (%)", value=4.45, step=0.01, key="cash_10")
         hedge_cost = st.number_input("Hedge cost (%)", value=0.18, step=0.01, key="hedge_10")
@@ -47,7 +49,11 @@ class Chapter10(ChapterBase):
         st.metric("Net carry after basis (bp)", f"{carry_net_bp:.2f}")
         st.info("TODO: add multi-currency basis term structure and collateral/CSA-aware funding analytics.")
 
-        return {"funding_basis_bp": basis_bp, "adjusted_fair_spread_bp": fair_adj_bp, "net_carry_bp": carry_net_bp}
+        return FundingBasisState(
+            funding_basis_bp=basis_bp,
+            adjusted_fair_spread_bp=fair_adj_bp,
+            net_carry_bp=carry_net_bp,
+        )
 
     def case_studies(self) -> list[dict[str, str]]:
         return [{"name": "Funding dislocation", "setup": "Swap float detaches from cash funding", "takeaway": "Basis adjustments prevent false rich/cheap signals."}]
@@ -58,5 +64,9 @@ class Chapter10(ChapterBase):
     def assessment(self) -> list[dict[str, str]]:
         return [{"prompt": "What does positive basis_bp imply?", "expected": "Derivative funding is rich to cash, increasing adjusted fair spread."}]
 
-    def exports_to_next_chapter(self) -> dict[str, object]:
-        return {"signals": ["funding_basis_bp", "adjusted_fair_spread_bp", "net_carry_bp"], "usage": "Feeds benchmark-transition and asset-swap decomposition chapters."}
+    def exports_to_next_chapter(self) -> ChapterExportState:
+        return ChapterExportState(
+            signals=["funding_basis_bp", "adjusted_fair_spread_bp", "net_carry_bp"],
+            usage="Feeds benchmark-transition and asset-swap decomposition chapters.",
+            schema_name="FundingBasisState",
+        )
